@@ -465,7 +465,30 @@ elif page == "Borrower Registration":
                         feature, feature.replace("_", " ").title()
                     )
                     help_text = field_help.get(feature, "")
-                    if feature in numerical_features:
+                    if feature in ("installment_commitment", "residence_since"):
+                        scale_help = {
+                            "installment_commitment": {
+                                1: "1 — 35% or more of disposable income",
+                                2: "2 — 25% to below 35%",
+                                3: "3 — 20% to below 25%",
+                                4: "4 — Below 20%"
+                            },
+                            "residence_since": {
+                                1: "1 — Less than 1 year",
+                                2: "2 — 1 to less than 4 years",
+                                3: "3 — 4 to less than 7 years",
+                                4: "4 — 7 years or more"
+                            }
+                        }[feature]
+                        values[feature] = st.selectbox(
+                            label,
+                            options=[1, 2, 3, 4],
+                            index=max(0, min(3, defaults.get(feature, 1) - 1)),
+                            format_func=lambda value, labels=scale_help: labels[value],
+                            help=help_text,
+                            key=f"input_{feature}"
+                        )
+                    elif feature in numerical_features:
                         minimum = 1 if feature in (
                             "duration", "credit_amount", "age"
                         ) else 0
