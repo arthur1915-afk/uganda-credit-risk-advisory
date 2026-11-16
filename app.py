@@ -37,28 +37,40 @@ html, body, [class*="css"] {
 }
 .stApp { background: var(--canvas); }
 .block-container {
-    padding-top: 2.0rem;
-    padding-bottom: 3rem;
-    max-width: 1450px;
+    padding-top: 1.35rem;
+    padding-bottom: 2.2rem;
+    max-width: 1380px;
 }
 h1, h2, h3, h4 {
     font-family: 'Manrope', sans-serif !important;
     color: var(--navy) !important;
     letter-spacing: -0.025em;
 }
-h1 { font-weight: 800 !important; }
+h1 { font-weight: 800 !important; font-size: 2.05rem !important; line-height: 1.16 !important; }
 h2, h3 { font-weight: 700 !important; }
+h2 { font-size: 1.45rem !important; }
+h3 { font-size: 1.12rem !important; }
+p, [data-testid="stMarkdownContainer"] { line-height: 1.55; }
 [data-testid="stSidebar"] {
     background: var(--navy);
     border-right: 1px solid #203B53;
 }
 [data-testid="stSidebar"] * { color: #F4F8FB !important; }
 [data-testid="stSidebar"] [data-testid="stRadio"] label {
-    padding: 0.55rem 0.65rem;
-    border-radius: 9px;
+    padding: 0.68rem 0.75rem;
+    border-radius: 10px;
+    margin: 0.16rem 0;
+    font-size: 0.91rem;
 }
 [data-testid="stSidebar"] [data-testid="stRadio"] label:hover {
     background: rgba(255,255,255,0.09);
+}
+[data-testid="stSidebar"] [data-testid="stRadio"] label > div:first-child {
+    display: none;
+}
+[data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked) {
+    background: rgba(21,154,145,0.22);
+    border: 1px solid rgba(127,224,212,0.24);
 }
 [data-testid="stSidebar"] hr { border-color: #365067; }
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
@@ -67,10 +79,11 @@ h2, h3 { font-weight: 700 !important; }
 div[data-testid="stMetric"] {
     background: white;
     border: 1px solid var(--line);
-    padding: 18px 20px;
-    border-radius: 14px;
-    box-shadow: 0 3px 14px rgba(16,36,58,0.035);
+    padding: 14px 16px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(16,36,58,0.025);
 }
+div[data-testid="stMetricValue"] { font-size: 1.8rem; }
 div[data-testid="stMetricLabel"] { color: var(--muted) !important; }
 div[data-testid="stMetricValue"] {
     color: var(--navy) !important;
@@ -123,22 +136,23 @@ hr { border-color: var(--line); }
     margin-bottom: 1.4rem;
 }
 .hero {
-    background: linear-gradient(115deg, #10243A 0%, #183D55 70%, #176C70 100%);
-    border-radius: 18px;
-    padding: 1.7rem 1.9rem;
+    background: linear-gradient(115deg, #10243A 0%, #183D55 68%, #147C78 100%);
+    border-radius: 16px;
+    padding: 1.35rem 1.6rem;
     color: white;
-    margin-bottom: 1.4rem;
-    box-shadow: 0 10px 28px rgba(16,36,58,0.12);
+    margin: 0.35rem 0 1.1rem 0;
+    box-shadow: 0 8px 22px rgba(16,36,58,0.10);
 }
-.hero h2 { color: white !important; margin: 0.25rem 0 0.45rem 0; }
-.hero p { color: #D5E3EB; margin: 0; }
+.hero h2 { color: white !important; margin: 0.2rem 0 0.35rem 0; font-size: 1.65rem !important; }
+.hero p { color: #D5E3EB; margin: 0; font-size: 0.93rem; max-width: 850px; }
 .hero .eyebrow { color: #7FE0D4; }
 .section-card {
     background: white;
     border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 1.1rem 1.25rem;
-    margin-bottom: 0.8rem;
+    border-radius: 12px;
+    padding: 0.95rem 1.05rem;
+    margin-bottom: 0.65rem;
+    box-shadow: 0 2px 10px rgba(16,36,58,0.025);
 }
 .section-card h4 { margin: 0 0 0.4rem 0; }
 .small-muted { color: #718096; font-size: 0.86rem; }
@@ -220,7 +234,7 @@ for key, default in {
 # Navigation and reusable page elements
 # -------------------------------------------------------------------
 st.sidebar.markdown(
-    "<div style='font-size:2rem;margin-bottom:0.2rem'>🏦</div>"
+    "<div style='font-size:1.7rem;margin-bottom:0.2rem'>🏦</div>"
     "<div style='font-family:Manrope;font-size:1.08rem;font-weight:800'>"
     "UGANDA CREDIT RISK</div>"
     "<div style='font-size:0.76rem;color:#B9C9D6'>ADVISORY PLATFORM</div>",
@@ -289,9 +303,9 @@ if page == "Dashboard":
     st.markdown(
         "<div class='hero'>"
         "<div class='eyebrow'>RESEARCH PROTOTYPE · UGANDA</div>"
-        "<h2>Understand credit risk.<br>Make model behaviour visible.</h2>"
-        "<p>Explore borrower information, review model outputs and inspect "
-        "individual SHAP and LIME explanations.</p></div>",
+        "<h2>Clearer insights into credit risk.</h2>"
+        "<p>Register a sample borrower, review the model's assessment and "
+        "understand the factors behind its output.</p></div>",
         unsafe_allow_html=True
     )
     research_notice()
