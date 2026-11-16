@@ -319,75 +319,174 @@ st.markdown(
 if page == "Dashboard":
     page_heading(
         "OVERVIEW",
-        "Credit risk dashboard",
-        "A research workspace for machine-learning assessment and explainability."
+        "Credit intelligence dashboard",
+        "Monitor research assessments, model activity and explainability workflow."
     )
     st.markdown(
-        "<div class='hero'>"
-        "<div class='eyebrow'>RESEARCH PROTOTYPE · UGANDA</div>"
-        "<h2>Clearer insights into credit risk.</h2>"
-        "<p>Register a sample borrower, review the model's assessment and "
-        "understand the factors behind its output.</p></div>",
+        "<div class='assessment-banner'>"
+        "<div><div class='eyebrow' style='color:#B8CEFF'>AI-POWERED RESEARCH WORKSPACE</div>"
+        "<h2>Understand the model behind every assessment.</h2>"
+        "<p>Explore machine-learning classifications, compare models and inspect "
+        "the explanations behind their outputs.</p></div>"
+        "<div class='banner-tag'>ACADEMIC PROTOTYPE · v1.0</div>"
+        "</div>",
         unsafe_allow_html=True
     )
     research_notice()
 
     total = len(st.session_state.history)
-    higher = sum(1 for item in st.session_state.history
-                 if item["Model classification"] == "Higher risk")
+    higher = sum(
+        1 for item in st.session_state.history
+        if item["Model classification"] == "Higher risk"
+    )
     lower = total - higher
-    pending = sum(1 for item in st.session_state.reviews
-                  if item["Status"] == "Pending review")
+    pending = sum(
+        1 for item in st.session_state.reviews
+        if item["Status"] == "Pending review"
+    )
+    reviewed = sum(
+        1 for item in st.session_state.reviews
+        if item["Status"] != "Pending review"
+    )
 
     k1, k2, k3, k4 = st.columns(4)
-    k1.metric("Assessments this session", total)
-    k2.metric("Higher-risk classifications", higher)
-    k3.metric("Lower-risk classifications", lower)
-    k4.metric("Pending reviews", pending)
-
-    st.markdown("### Prototype workflow")
-    steps = st.columns(4)
-    workflow = [
-        ("01", "Register", "Enter fictional borrower details."),
-        ("02", "Assess", "Generate the benchmark model output."),
-        ("03", "Explain", "Inspect SHAP and LIME explanations."),
-        ("04", "Review", "Record a human review status.")
+    metrics = [
+        (k1, "TOTAL ASSESSMENTS", total, "Current browser session"),
+        (k2, "HIGHER-RISK CLASS", higher, "Model classifications"),
+        (k3, "LOWER-RISK CLASS", lower, "Model classifications"),
+        (k4, "REVIEWS COMPLETED", reviewed, f"{pending} pending")
     ]
-    for column, (number, title, description) in zip(steps, workflow):
-        with column:
+    for col, label, value, note in metrics:
+        with col:
             st.markdown(
-                f"<div class='section-card'>"
-                f"<div class='eyebrow'>STEP {number}</div>"
-                f"<h4>{title}</h4>"
-                f"<div class='small-muted'>{description}</div></div>",
+                f"<div class='assessment-kpi'>"
+                f"<div class='assessment-kpi-label'>{label}</div>"
+                f"<div class='assessment-kpi-value'>{value}</div>"
+                f"<div class='assessment-kpi-note'>{note}</div></div>",
                 unsafe_allow_html=True
             )
 
-    left, right = st.columns([1.35, 1])
-    with left:
-        st.markdown("### Recent assessment activity")
-        if st.session_state.history:
-            history_df = pd.DataFrame(st.session_state.history)
-            st.dataframe(history_df.tail(8), use_container_width=True,
-                         hide_index=True)
-        else:
-            st.info("No assessments have been run in this session yet.")
-    with right:
-        st.markdown("### Model components")
+    st.markdown("### Assessment activity")
+    chart_left, chart_right = st.columns([1.2, 1])
+    with chart_left:
         st.markdown(
-            "<div class='section-card'><h4>Gradient Boosting</h4>"
-            "<div class='small-muted'>Primary model for borrower assessment "
-            "and individual explanations.</div></div>"
-            "<div class='section-card'><h4>Logistic Regression</h4>"
-            "<div class='small-muted'>Retained in the package for model "
-            "comparison.</div></div>"
-            "<div class='section-card'><h4>SHAP + LIME</h4>"
-            "<div class='small-muted'>Two complementary approaches to "
-            "interpreting model behaviour.</div></div>",
+            "<div class='section-card'><h4>Assessment volume</h4>"
+            "<div class='small-muted'>Number of assessments recorded in this "
+            "browser session, grouped by date.</div></div>",
+            unsafe_allow_html=True
+        )
+        if st.session_state.history:
+            activity = pd.DataFrame(st.session_state.history)
+            activity["Date"] = pd.to_datetime(
+                activity["Date"], errors="coerce"
+            ).dt.date
+            daily = activity.groupby("Date").size().rename(
+                "Assessments"
+            ).to_frame()
+            st.bar_chart(daily, height=245)
+        else:
+            st.info("Assessment activity will appear here after you run the model.")
+
+    with chart_right:
+        st.markdown(
+            "<div class='section-card'><h4>Classification distribution</h4>"
+            "<div class='small-muted'>Distribution of the primary model's "
+            "classifications in this session.</div></div>",
+            unsafe_allow_html=True
+        )
+        if total:
+            distribution = pd.DataFrame({
+                "Classification": ["Higher-risk class", "Lower-risk class"],
+                "Assessments": [higher, lower]
+            }).set_index("Classification")
+            st.bar_chart(distribution, height=245, horizontal=True)
+            st.caption(
+                "Session counts only. These are not population-level risk rates "
+                "or model performance metrics."
+            )
+        else:
+            st.info("No classifications to display yet.")
+
+    st.markdown("### AI and machine-learning system")
+    pipeline_cols = st.columns(5)
+    pipeline = [
+        ("01", "Borrower input", "Fictional profile fields", "Input"),
+        ("02", "Preprocessing", "Imputation and encoding", "Data"),
+        ("03", "ML prediction", "Gradient Boosting + Logistic Regression", "Models"),
+        ("04", "XAI explanation", "SHAP + LIME", "Explainability"),
+        ("05", "Human review", "Reviewer notes and status", "Governance")
+    ]
+    for col, (number, title, detail, tag) in zip(pipeline_cols, pipeline):
+        with col:
+            st.markdown(
+                f"<div class='section-card' style='min-height:158px'>"
+                f"<div class='eyebrow'>STAGE {number}</div>"
+                f"<h4>{title}</h4>"
+                f"<div class='small-muted'>{detail}</div>"
+                f"<div style='margin-top:.75rem;font-size:.68rem;font-weight:800;"
+                f"color:#2457D6'>{tag.upper()}</div></div>",
+                unsafe_allow_html=True
+            )
+
+    st.markdown("### Model workspace")
+    model_left, model_right = st.columns([1.1, 1])
+    with model_left:
+        st.markdown(
+            "<div class='section-card'><div class='eyebrow'>PRIMARY CLASSIFIER</div>"
+            "<h3>Gradient Boosting</h3>"
+            "<div class='small-muted'>Main model used to generate the research "
+            "classification and the SHAP/LIME explanations.</div>"
+            "<hr><div class='eyebrow'>COMPARISON CLASSIFIER</div>"
+            "<h3>Logistic Regression</h3>"
+            "<div class='small-muted'>Second trained model used to compare class "
+            "predictions and probability estimates.</div></div>",
+            unsafe_allow_html=True
+        )
+    with model_right:
+        st.markdown(
+            "<div class='section-card'><div class='eyebrow'>EXPLAINABILITY TOOLKIT</div>"
+            "<h3>SHAP</h3><div class='small-muted'>Feature contribution analysis "
+            "for the primary model output.</div><hr>"
+            "<h3>LIME</h3><div class='small-muted'>Local approximation of model "
+            "behaviour around an individual sample.</div></div>",
             unsafe_allow_html=True
         )
 
-# -------------------------------------------------------------------
+    st.markdown("### Recent assessment records")
+    if st.session_state.history:
+        history_df = pd.DataFrame(st.session_state.history)
+        st.dataframe(
+            history_df.tail(10).iloc[::-1],
+            use_container_width=True,
+            hide_index=True
+        )
+    else:
+        st.info(
+            "Your recent assessments will appear here. Start by registering "
+            "a fictional borrower."
+        )
+
+    st.markdown("### Research and governance status")
+    governance_left, governance_right = st.columns(2)
+    with governance_left:
+        st.markdown(
+            "<div class='section-card'><div class='eyebrow'>CURRENT DATASET</div>"
+            "<h3>German Credit benchmark</h3>"
+            "<div class='small-muted'>The models were trained on a public benchmark "
+            "dataset. It is not Ugandan bank lending data and does not establish "
+            "local predictive validity.</div></div>",
+            unsafe_allow_html=True
+        )
+    with governance_right:
+        st.markdown(
+            "<div class='section-card'><div class='eyebrow'>HUMAN OVERSIGHT</div>"
+            f"<h3>{len(st.session_state.reviews)} review record(s)</h3>"
+            "<div class='small-muted'>Reviewer entries are held in the current "
+            "browser session only. They are not saved to a permanent audit database."
+            "</div></div>",
+            unsafe_allow_html=True
+        )
+
 # Borrower registration
 # -------------------------------------------------------------------
 elif page == "Borrower Registration":
