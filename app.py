@@ -351,6 +351,39 @@ elif page == "Borrower Registration":
     # while retaining the original code as the value sent to the model.
     category_descriptions = {
         "checking_status": {
+            "0<=X<200": "Bank account balance: between 0 and 199",
+            "<0": "Bank account is overdrawn",
+            ">=200": "Bank account balance: 200 or more",
+            "no checking": "No checking account",
+        },
+        "personal_status": {
+            "male mar/wid": "Male, married or widowed",
+            "male div/sep": "Male, divorced or separated",
+            "female div/sep/mar": "Female, divorced, separated or married",
+            "male single": "Male, single",
+            "female single": "Female, single",
+        },
+        "employment": {
+            "1<=X<4": "Employed for 1 to 3 years",
+            "4<=X<7": "Employed for 4 to 6 years",
+            ">=7": "Employed for 7 years or more",
+            "<1": "Employed for less than 1 year",
+            "unemployed": "Not currently employed",
+        },
+        "savings_status": {
+            "100<=X<500": "Savings balance: between 100 and 499",
+            "<100": "Savings balance: less than 100",
+            "500<=X<1000": "Savings balance: between 500 and 999",
+            ">=1000": "Savings balance: 1,000 or more",
+            "no known savings": "No savings account / balance not recorded",
+        },
+        "job": {
+            "high qualif/self emp/mgmt": "Highly qualified, self-employed or management role",
+            "skilled": "Skilled employee",
+            "unskilled resident": "Unskilled or entry-level work",
+            "unemployed/unskilled non-resident": "Not employed or unskilled non-resident",
+        },
+        "checking_status": {
             "A11": "Account is overdrawn",
             "A12": "Small positive balance",
             "A13": "Higher account balance",
@@ -506,8 +539,11 @@ elif page == "Borrower Registration":
                         descriptions = category_descriptions.get(feature, {})
                         def display_category(value, descriptions=descriptions):
                             raw = str(value)
+                            normalized = raw.strip().lower()
                             if raw in descriptions:
                                 return descriptions[raw]
+                            if normalized in descriptions:
+                                return descriptions[normalized]
                             return raw.replace("_", " ").replace("-", " ").title()
                         values[feature] = st.selectbox(
                             label,
