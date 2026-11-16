@@ -80,6 +80,19 @@ hr {border-color:var(--line);}
 .form-section-title {font-family:'Manrope',sans-serif;color:#10243A;font-weight:800;font-size:1rem;margin-bottom:.18rem;}
 .form-section-help {color:#718096;font-size:.83rem;}
 .footer-note {color:#8392A1;font-size:.78rem;border-top:1px solid var(--line);padding-top:.9rem;margin-top:2.2rem;}
+.risk-panel {background:#fff;border:1px solid var(--line);border-radius:18px;padding:1.35rem 1.5rem;margin:.8rem 0 1.1rem;box-shadow:0 8px 24px rgba(16,36,58,.04);}
+.risk-panel-top {display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1rem;}
+.risk-number {font-family:'Manrope',sans-serif;font-size:2.45rem;line-height:1.05;font-weight:800;color:var(--navy);}
+.risk-pill {background:#EAF3F3;color:#0F766E;border-radius:999px;padding:.45rem .8rem;font-size:.78rem;font-weight:800;}
+.risk-track {height:13px;background:#E8EEF2;border-radius:99px;overflow:hidden;}
+.risk-fill {height:100%;border-radius:99px;background:linear-gradient(90deg,#0D9488,#E2A34A);}
+.risk-scale {display:flex;justify-content:space-between;color:#718096;font-size:.72rem;margin-top:.55rem;}
+.step-strip {display:grid;grid-template-columns:repeat(4,1fr);gap:.55rem;margin:.9rem 0 1.2rem;}
+.step-chip {background:#fff;border:1px solid var(--line);border-radius:12px;padding:.7rem .8rem;color:#718096;font-size:.78rem;}
+.step-chip strong {display:block;color:var(--navy);font-size:.86rem;margin-bottom:.12rem;}
+.explanation-callout {background:#F0F8F7;border-left:4px solid #0D9488;padding:.85rem 1rem;border-radius:0 12px 12px 0;margin:.6rem 0 1rem;color:#294B52;}
+@media(max-width:700px){.risk-panel-top{align-items:flex-start;flex-direction:column}.step-strip{grid-template-columns:repeat(2,1fr)}}
+
 [data-testid="stCaptionContainer"] {color:#7B8997;}
 @media(max-width:900px) {
  .block-container {padding-left:1rem;padding-right:1rem;}
@@ -204,6 +217,31 @@ def research_notice():
 def risk_label(prediction):
     return "Higher risk" if prediction == 1 else "Lower risk"
 
+def readable_feature_name(name):
+    """Turn encoded model feature names into more readable labels."""
+    text = str(name).replace("num__", "").replace("cat__", "")
+    text = text.replace("_", " ").strip()
+    return text[:1].upper() + text[1:] if text else "Model feature"
+
+def show_risk_gauge(probability):
+    """Display the model's bad-credit class probability as a visual gauge."""
+    pct = max(0.0, min(100.0, float(probability) * 100))
+    st.markdown(
+        f"""
+        <div class="risk-panel">
+          <div class="risk-panel-top">
+            <div><div class="eyebrow">MODEL PROBABILITY</div>
+            <div class="risk-number">{pct:.1f}%</div>
+            <div class="small-muted">Bad-credit class probability</div></div>
+            <div class="risk-pill">{'Higher' if pct >= 50 else 'Lower'} risk class</div>
+          </div>
+          <div class="risk-track"><div class="risk-fill" style="width:{pct:.1f}%"></div></div>
+          <div class="risk-scale"><span>0% · Lower</span><span>50% threshold</span><span>100% · Higher</span></div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
 st.markdown(
     "<div style='display:flex;justify-content:space-between;align-items:center;"
     "gap:1rem;padding:.15rem 0 .9rem;border-bottom:1px solid #E5EBF0;"
@@ -313,6 +351,16 @@ elif page == "Borrower Registration":
         "Important: this is a research demonstration form, not a real Ugandan "
         "bank application. The benchmark dataset uses some categories and "
         "definitions that may differ from local banking practice."
+    )
+
+    st.markdown(
+        "<div class='step-strip'>"
+        "<div class='step-chip'><strong>01 · Personal</strong>Applicant profile</div>"
+        "<div class='step-chip'><strong>02 · Financial</strong>Work and assets</div>"
+        "<div class='step-chip'><strong>03 · Credit</strong>Repayment history</div>"
+        "<div class='step-chip'><strong>04 · Loan</strong>Request details</div>"
+        "</div>",
+        unsafe_allow_html=True
     )
 
     # Translate technical dataset names into clear form labels.
@@ -618,6 +666,17 @@ elif page == "Credit Risk Assessment":
             f"browser session only.</div></div>",
             unsafe_allow_html=True
         )
+
+        profile = borrower["values"]
+        with st.expander("Preview applicant profile", expanded=True):
+            p1, p2, p3 = st.columns(3)
+            p1.metric("Applicant age", f"{int(profile.get('age', 0))} years")
+            p2.metric("Loan term", f"{int(profile.get('duration', 0))} months")
+            p3.metric("Requested amount", f"{profile.get('credit_amount', '—')} dataset units")
+            st.caption(
+                "These are selected fields from the fictional applicant profile. "
+                "The amount is shown in original benchmark dataset units, not UGX."
+            )
         if st.button("Run credit risk assessment", type="primary"):
             try:
                 row = pd.DataFrame([borrower["values"]])[original_features]
@@ -688,7 +747,7 @@ elif page == "Credit Risk Assessment":
                 st.error("Model classification: Higher risk")
             else:
                 st.success("Model classification: Lower risk")
-            st.progress(float(assessment["bad_probability"]))
+            show_risk_gauge(assessment["bad_probability"])
             st.caption(
                 "The class uses the model's default 0.50 decision threshold. "
                 "Probabilities and classifications are benchmark-model outputs, "
@@ -721,9 +780,14 @@ elif page == "Explainable AI":
         with shap_tab:
             st.markdown("### Which features influenced this output?")
             shap_df = pd.DataFrame({
-                "Feature": feature_names,
+                "Feature": [readable_feature_name(name) for name in feature_names],
                 "Contribution": assessment["shap_contributions"]
             })
+            shap_df["Direction"] = np.where(
+                shap_df["Contribution"] >= 0,
+                "Pushes toward bad-credit class",
+                "Pushes toward good-credit class"
+            )
             shap_df["Absolute contribution"] = shap_df["Contribution"].abs()
             shap_df = shap_df.nlargest(
                 12, "Absolute contribution"
@@ -736,8 +800,24 @@ elif page == "Explainable AI":
                 "Positive values push the model output toward the bad-credit "
                 "class; negative values push it toward the good-credit class."
             )
+            strongest = shap_df.reindex(
+                shap_df["Absolute contribution"].sort_values(ascending=False).index
+            ).head(3)
+            if not strongest.empty:
+                summaries = []
+                for _, item in strongest.iterrows():
+                    direction = "increased" if item["Contribution"] >= 0 else "decreased"
+                    summaries.append(
+                        f"<li><b>{item['Feature']}</b> {direction} the model output "
+                        f"toward the bad-credit class.</li>"
+                    )
+                st.markdown(
+                    "<div class='explanation-callout'><b>In plain language</b><ul>"
+                    + "".join(summaries) + "</ul></div>",
+                    unsafe_allow_html=True
+                )
             st.dataframe(
-                shap_df[["Feature", "Contribution"]],
+                shap_df[["Feature", "Direction", "Contribution"]],
                 use_container_width=True,
                 hide_index=True
             )
@@ -747,6 +827,11 @@ elif page == "Explainable AI":
             lime_df = pd.DataFrame(
                 lime_items,
                 columns=["Feature condition", "Local contribution"]
+            )
+            st.caption(
+                "LIME describes local conditions in the model's encoded feature space. "
+                "Some conditions may look technical because categorical inputs are "
+                "expanded into model features."
             )
             st.dataframe(
                 lime_df, use_container_width=True, hide_index=True
