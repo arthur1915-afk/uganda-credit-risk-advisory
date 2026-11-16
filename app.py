@@ -20,20 +20,22 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
 :root {
- --navy:#10243A; --navy2:#183D55; --teal:#0D9488; --ink:#172B3A;
- --muted:#718096; --line:#E5EBF0; --canvas:#F4F7FA;
+ --navy:#10243A; --teal:#0D9488; --ink:#172B3A; --muted:#718096;
+ --line:#E7EDF2; --canvas:#F3F6F9; --white:#FFFFFF;
 }
-html, body, [class*="css"] {font-family:'DM Sans',sans-serif;color:var(--ink);}
+html,body,[class*="css"] {font-family:'DM Sans',sans-serif;color:var(--ink);}
 .stApp {background:var(--canvas);}
-.block-container {max-width:1420px;padding-top:1.6rem;padding-bottom:3rem;}
-h1,h2,h3,h4 {font-family:'Manrope',sans-serif!important;color:var(--navy)!important;letter-spacing:-.03em;}
-h1 {font-size:2.1rem!important;font-weight:800!important;}
+.block-container {max-width:1480px;padding:1.55rem 2.2rem 3rem;}
+h1,h2,h3,h4 {font-family:'Manrope',sans-serif!important;color:var(--navy)!important;letter-spacing:-.035em;}
+h1 {font-size:2.05rem!important;font-weight:800!important;line-height:1.15!important;}
 h2 {font-size:1.45rem!important;font-weight:750!important;}
-h3 {font-size:1.12rem!important;font-weight:750!important;}
-[data-testid="stSidebar"] {background:#0D2034;border-right:1px solid #203B53;}
+h3 {font-size:1.1rem!important;font-weight:750!important;}
+p {line-height:1.55;}
+[data-testid="stSidebar"] {background:#0B1F33;border-right:1px solid #1E3850;}
 [data-testid="stSidebar"] * {color:#F4F8FB!important;}
 [data-testid="stSidebar"] [data-testid="stRadio"] label {
- padding:.72rem .8rem;border-radius:12px;margin:.18rem 0;font-size:.91rem;
+ padding:.78rem .85rem;border-radius:12px;margin:.2rem 0;font-size:.92rem;
+ transition:background .15s ease;
 }
 [data-testid="stSidebar"] [data-testid="stRadio"] label:hover {background:rgba(255,255,255,.08);}
 [data-testid="stSidebar"] [data-testid="stRadio"] label > div:first-child {display:none;}
@@ -43,46 +45,46 @@ h3 {font-size:1.12rem!important;font-weight:750!important;}
 [data-testid="stSidebar"] hr {border-color:#365067;}
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {color:#B9C9D6!important;}
 div[data-testid="stMetric"] {
- background:#fff;border:1px solid var(--line);padding:17px 19px;border-radius:16px;
- box-shadow:0 5px 18px rgba(16,36,58,.035);
+ background:#fff;border:1px solid var(--line);padding:1.1rem 1.2rem;border-radius:17px;
+ box-shadow:0 7px 22px rgba(16,36,58,.035);min-height:112px;
 }
-div[data-testid="stMetricLabel"] {color:var(--muted)!important;}
-div[data-testid="stMetricValue"] {color:var(--navy)!important;font-family:'Manrope',sans-serif;font-weight:800;}
+div[data-testid="stMetricLabel"] {color:var(--muted)!important;font-size:.83rem;}
+div[data-testid="stMetricValue"] {color:var(--navy)!important;font-family:'Manrope',sans-serif;font-weight:800;font-size:1.8rem;}
 .stButton>button,.stFormSubmitButton>button {
- background:var(--teal);color:white;border:1px solid var(--teal);border-radius:11px;
- font-weight:700;padding:.62rem 1rem;min-height:2.8rem;transition:all .15s ease;
+ background:var(--teal);color:#fff;border:1px solid var(--teal);border-radius:11px;
+ font-weight:700;padding:.66rem 1rem;min-height:2.8rem;transition:all .15s ease;
 }
-.stButton>button:hover,.stFormSubmitButton>button:hover {background:#0F766E;border-color:#0F766E;color:white;}
+.stButton>button:hover,.stFormSubmitButton>button:hover {background:#0F766E;border-color:#0F766E;color:#fff;transform:translateY(-1px);}
 .stTextInput input,.stNumberInput input,.stTextArea textarea,
-.stSelectbox [data-baseweb="select"] {border-radius:10px!important;}
-[data-testid="stForm"] {
- background:#fff;border:1px solid var(--line);border-radius:18px;
- padding:1.4rem 1.5rem;box-shadow:0 6px 22px rgba(16,36,58,.035);
-}
+.stSelectbox [data-baseweb="select"] {border-radius:10px!important;background:#fff;}
+[data-testid="stForm"] {background:#fff;border:1px solid var(--line);border-radius:18px;padding:1.5rem;box-shadow:0 8px 28px rgba(16,36,58,.035);}
 div[data-testid="stAlert"] {border-radius:13px;}
-[data-testid="stDataFrame"] {border:1px solid var(--line);border-radius:13px;overflow:hidden;}
+[data-testid="stDataFrame"] {border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+[data-baseweb="tab-list"] {gap:.5rem;border-bottom:1px solid var(--line);}
+[data-baseweb="tab"] {border-radius:9px 9px 0 0;padding:.7rem 1rem;}
 hr {border-color:var(--line);}
-.eyebrow {color:var(--teal);font-size:.7rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;margin-bottom:.4rem;}
-.page-subtitle {color:var(--muted);font-size:.97rem;margin-top:-.4rem;margin-bottom:1.45rem;}
+.eyebrow {color:var(--teal);font-size:.69rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin-bottom:.4rem;}
+.page-subtitle {color:var(--muted);font-size:.96rem;margin-top:-.35rem;margin-bottom:1.45rem;}
 .hero {
- background:linear-gradient(115deg,#10243A 0%,#183D55 66%,#0F766E 100%);
- border-radius:20px;padding:1.65rem 1.8rem;color:white;margin:.35rem 0 1.2rem 0;
- box-shadow:0 12px 30px rgba(16,36,58,.12);
+ background:linear-gradient(112deg,#10243A 0%,#173B54 64%,#0D766F 100%);
+ border-radius:21px;padding:1.8rem 2rem;color:#fff;margin:.35rem 0 1.25rem;
+ box-shadow:0 14px 34px rgba(16,36,58,.13);position:relative;overflow:hidden;
 }
-.hero h2 {color:white!important;margin:.2rem 0 .45rem 0;font-size:1.7rem!important;}
-.hero p {color:#D5E3EB;margin:0;font-size:.95rem;max-width:850px;}
-.hero .eyebrow {color:#7FE0D4;}
-.section-card {background:#fff;border:1px solid var(--line);border-radius:16px;padding:1.1rem 1.2rem;margin-bottom:.75rem;box-shadow:0 4px 16px rgba(16,36,58,.025);}
-.section-card h4 {margin:0 0 .4rem 0;}
+.hero h2 {color:#fff!important;margin:.25rem 0 .5rem;font-size:1.8rem!important;}
+.hero p {color:#D7E5EC;margin:0;font-size:.95rem;max-width:850px;}
+.hero .eyebrow {color:#81E0D4;}
+.section-card {background:#fff;border:1px solid var(--line);border-radius:16px;padding:1.15rem 1.25rem;margin-bottom:.75rem;box-shadow:0 5px 18px rgba(16,36,58,.025);}
+.section-card h4 {margin:0 0 .4rem;}
 .small-muted {color:var(--muted);font-size:.86rem;}
-.form-section {
- background:#F8FAFC;border:1px solid #E8EEF3;border-radius:14px;
- padding:1rem 1.1rem;margin:.55rem 0 .9rem 0;
-}
+.form-section {background:#F7FAFC;border:1px solid #E6EDF2;border-radius:14px;padding:1rem 1.15rem;margin:.65rem 0 .95rem;}
 .form-section-title {font-family:'Manrope',sans-serif;color:#10243A;font-weight:800;font-size:1rem;margin-bottom:.18rem;}
-.form-section-help {color:#718096;font-size:.82rem;margin-bottom:.65rem;}
-.field-help {color:#718096;font-size:.78rem;}
+.form-section-help {color:#718096;font-size:.83rem;}
 .footer-note {color:#8392A1;font-size:.78rem;border-top:1px solid var(--line);padding-top:.9rem;margin-top:2.2rem;}
+[data-testid="stCaptionContainer"] {color:#7B8997;}
+@media(max-width:900px) {
+ .block-container {padding-left:1rem;padding-right:1rem;}
+ .hero {padding:1.3rem;}
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -201,6 +203,18 @@ def research_notice():
 
 def risk_label(prediction):
     return "Higher risk" if prediction == 1 else "Lower risk"
+
+st.markdown(
+    "<div style='display:flex;justify-content:space-between;align-items:center;"
+    "gap:1rem;padding:.15rem 0 .9rem;border-bottom:1px solid #E5EBF0;"
+    "margin-bottom:1.2rem'>"
+    "<div style='font-family:Manrope;font-weight:800;color:#10243A;"
+    "font-size:.88rem;letter-spacing:.02em'>UGANDA CREDIT RISK ADVISORY</div>"
+    "<div style='font-size:.74rem;color:#718096;background:#EAF3F3;"
+    "padding:.35rem .7rem;border-radius:999px;font-weight:700'>"
+    "ACADEMIC PROTOTYPE · v1.0</div></div>",
+    unsafe_allow_html=True
+)
 
 # -------------------------------------------------------------------
 # Dashboard
