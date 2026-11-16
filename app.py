@@ -98,6 +98,65 @@ hr {border-color:var(--line);}
  .block-container {padding-left:1rem;padding-right:1rem;}
  .hero {padding:1.3rem;}
 }
+
+/* Modern fintech dashboard treatment */
+:root {
+ --navy:#0B1D3A; --teal:#2457D6; --ink:#17243B;
+ --muted:#748198; --line:#E6EAF1; --canvas:#F4F6FA;
+}
+.stApp {background:#F3F5F9;}
+.block-container {max-width:1540px;padding-top:1.25rem;}
+[data-testid="stSidebar"] {background:linear-gradient(180deg,#07172F 0%,#102B55 100%);}
+[data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked) {
+ background:rgba(59,110,235,.24);border:1px solid rgba(126,164,255,.3);
+}
+.stButton>button,.stFormSubmitButton>button {
+ background:#2457D6;border-color:#2457D6;border-radius:10px;
+ box-shadow:0 5px 12px rgba(36,87,214,.14);
+}
+.stButton>button:hover,.stFormSubmitButton>button:hover {
+ background:#1747BD;border-color:#1747BD;
+}
+.eyebrow {color:#315FD0;}
+.hero {background:linear-gradient(115deg,#071A3A 0%,#123B79 65%,#2457D6 100%);}
+.hero .eyebrow {color:#A9C5FF;}
+.section-card,.risk-panel {
+ border-radius:18px;border-color:#E8ECF3;
+ box-shadow:0 8px 28px rgba(20,39,75,.045);
+}
+.fintech-topbar {
+ display:flex;align-items:center;justify-content:space-between;gap:1rem;
+ background:#fff;border:1px solid #E8ECF3;border-radius:16px;
+ padding:.85rem 1.1rem;margin:.2rem 0 1.2rem;
+ box-shadow:0 5px 18px rgba(20,39,75,.035);
+}
+.fintech-brand {font-family:'Manrope',sans-serif;font-weight:800;color:#10264A;font-size:.9rem;letter-spacing:.015em;}
+.fintech-meta {display:flex;align-items:center;gap:.55rem;color:#718096;font-size:.75rem;}
+.fintech-dot {width:8px;height:8px;border-radius:50%;background:#20B486;display:inline-block;}
+.assessment-banner {
+ background:linear-gradient(115deg,#071A3A 0%,#123B79 62%,#2457D6 100%);
+ color:#fff;border-radius:20px;padding:1.35rem 1.55rem;
+ display:flex;align-items:center;justify-content:space-between;gap:1.5rem;
+ margin:.5rem 0 1.2rem;box-shadow:0 14px 30px rgba(13,42,91,.13);
+}
+.assessment-banner h2 {color:#fff!important;margin:.15rem 0 .35rem;font-size:1.55rem!important;}
+.assessment-banner p {color:#D6E3FB;margin:0;font-size:.88rem;}
+.banner-tag {background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);padding:.5rem .8rem;border-radius:999px;color:#EAF1FF;font-size:.74rem;font-weight:700;white-space:nowrap;}
+.assessment-kpi {
+ background:#fff;border:1px solid #E8ECF3;border-radius:16px;padding:1rem 1.1rem;
+ min-height:104px;box-shadow:0 7px 20px rgba(20,39,75,.035);
+}
+.assessment-kpi-label {font-size:.75rem;color:#7B879B;font-weight:600;margin-bottom:.45rem;}
+.assessment-kpi-value {font-family:'Manrope',sans-serif;font-size:1.55rem;font-weight:800;color:#10264A;line-height:1.1;}
+.assessment-kpi-note {font-size:.72rem;color:#8A95A7;margin-top:.35rem;}
+.risk-pill {background:#EDF2FF;color:#2457D6;}
+.risk-fill {background:linear-gradient(90deg,#2457D6,#63A7FF);}
+[data-baseweb="tab"] {background:#F7F9FC;border:1px solid #E8ECF3;}
+[data-baseweb="tab"][aria-selected="true"] {background:#fff;color:#2457D6;}
+@media(max-width:700px) {
+ .assessment-banner {align-items:flex-start;flex-direction:column;}
+ .fintech-topbar {align-items:flex-start;flex-direction:column;}
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -655,6 +714,20 @@ elif page == "Credit Risk Assessment":
         "Credit risk assessment",
         "Review the sample applicant, run the benchmark model and inspect its output."
     )
+    st.markdown(
+        "<div class='fintech-topbar'>"
+        "<div class='fintech-brand'>◈  CREDIT INTELLIGENCE WORKSPACE</div>"
+        "<div class='fintech-meta'><span class='fintech-dot'></span>"
+        "Research environment <span>·</span> Model suite v1.0</div></div>"
+        "<div class='assessment-banner'>"
+        "<div><div class='eyebrow' style='color:#A9C5FF'>AI-POWERED RESEARCH ANALYSIS</div>"
+        "<h2>Applicant assessment centre</h2>"
+        "<p>Machine-learning classification, model comparison and explainability "
+        "in one review workspace.</p></div>"
+        "<div class='banner-tag'>GRADIENT BOOSTING · SHAP · LIME</div>"
+        "</div>",
+        unsafe_allow_html=True
+    )
     research_notice()
     borrower = st.session_state.borrower
 
@@ -678,15 +751,22 @@ elif page == "Credit Risk Assessment":
 
         st.markdown("### Applicant snapshot")
         snap1, snap2, snap3, snap4 = st.columns(4)
-        snap1.metric("Age", f"{int(profile.get('age', 0))} years")
-        snap2.metric("Loan term", f"{int(profile.get('duration', 0))} months")
-        snap3.metric(
-            "Requested amount",
-            f"{profile.get('credit_amount', '—'):,}" if isinstance(
+        snapshot_items = [
+            ("APPLICANT AGE", f"{int(profile.get('age', 0))} yrs", "Borrower profile"),
+            ("LOAN TERM", f"{int(profile.get('duration', 0))} months", "Requested duration"),
+            ("REQUESTED AMOUNT", f"{profile.get('credit_amount', '—'):,}" if isinstance(
                 profile.get("credit_amount"), (int, float, np.integer, np.floating)
-            ) else str(profile.get("credit_amount", "—"))
-        )
-        snap4.metric("Existing credits", str(profile.get("existing_credits", "—")))
+            ) else str(profile.get("credit_amount", "—")), "Original dataset units"),
+            ("EXISTING CREDITS", str(profile.get("existing_credits", "—")), "Recorded commitments")
+        ]
+        for col, (label, value, note) in zip([snap1, snap2, snap3, snap4], snapshot_items):
+            with col:
+                st.markdown(
+                    f"<div class='assessment-kpi'><div class='assessment-kpi-label'>{label}</div>"
+                    f"<div class='assessment-kpi-value'>{value}</div>"
+                    f"<div class='assessment-kpi-note'>{note}</div></div>",
+                    unsafe_allow_html=True
+                )
         st.caption(
             "Requested amount is expressed in the German Credit dataset's original "
             "units. It is not an amount in UGX or a live financial value."
