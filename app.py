@@ -781,99 +781,254 @@ elif page == "Credit Risk Assessment":
         assessment = st.session_state.assessment
         if assessment is not None and assessment["reference"] == borrower["reference"]:
             st.markdown("---")
-            result_left, result_right = st.columns([1.25, 1])
-            with result_left:
-                st.markdown("### Primary model result")
-                if assessment["prediction"] == 1:
-                    st.error("Gradient Boosting classification: Higher risk")
-                else:
-                    st.success("Gradient Boosting classification: Lower risk")
-                show_risk_gauge(assessment["bad_probability"])
-                st.caption(
-                    f"Assessment generated {assessment['created_at']}. "
-                    "The classification uses the model's default 0.50 threshold."
-                )
-            with result_right:
-                st.markdown("### Class probabilities")
-                st.markdown(
-                    "<div class='section-card'><div class='small-muted'>"
-                    "Good-credit class</div>"
-                    f"<h2 style='margin:.15rem 0;color:#0F766E!important'>"
-                    f"{assessment['good_probability']:.1%}</h2>"
-                    "<div class='small-muted'>Bad-credit class</div>"
-                    f"<h2 style='margin:.15rem 0;color:#B7791F!important'>"
-                    f"{assessment['bad_probability']:.1%}</h2></div>",
-                    unsafe_allow_html=True
-                )
-                st.markdown(
-                    "<div class='small-muted'>These are probabilities produced "
-                    "by the benchmark model, not the likelihood of loan default "
-                    "for a real Ugandan applicant.</div>",
-                    unsafe_allow_html=True
-                )
+            st.markdown("## Assessment intelligence report")
+            st.caption(
+                f"Reference: {assessment['reference']}  ·  "
+                f"Generated: {assessment['created_at']}  ·  "
+                "Primary model: Gradient Boosting"
+            )
 
-            st.markdown("### Model comparison")
-            comp1, comp2 = st.columns(2)
-            with comp1:
-                st.markdown(
-                    "<div class='section-card'><div class='eyebrow'>PRIMARY MODEL</div>"
-                    "<h3>Gradient Boosting</h3>"
-                    f"<h2 style='margin:.2rem 0'>{risk_label(assessment['prediction'])}</h2>"
-                    f"<div class='small-muted'>Bad-credit class probability: "
-                    f"{assessment['bad_probability']:.1%}</div></div>",
-                    unsafe_allow_html=True
-                )
-            with comp2:
-                st.markdown(
-                    "<div class='section-card'><div class='eyebrow'>COMPARISON MODEL</div>"
-                    "<h3>Logistic Regression</h3>"
-                    f"<h2 style='margin:.2rem 0'>{risk_label(assessment['logistic_prediction'])}</h2>"
-                    f"<div class='small-muted'>Bad-credit class probability: "
-                    f"{assessment['logistic_bad_probability']:.1%}</div></div>",
-                    unsafe_allow_html=True
-                )
-            if assessment["prediction"] != assessment["logistic_prediction"]:
+            # Input profile checks are descriptive checks, not a credit score.
+            required_fields = list(original_features)
+            missing_fields = [
+                field for field in required_fields
+                if field not in profile or profile[field] is None
+                or (isinstance(profile[field], str) and not profile[field].strip())
+            ]
+            completeness = (
+                100 * (len(required_fields) - len(missing_fields))
+                / max(1, len(required_fields))
+            )
+            model_agreement = (
+                assessment["prediction"] == assessment["logistic_prediction"]
+            )
+            threshold_distance = abs(assessment["bad_probability"] - 0.5)
+            threshold_status = (
+                "Close to classification threshold"
+                if threshold_distance < 0.10
+                else "Further from classification threshold"
+            )
+
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric("Profile completeness", f"{completeness:.0f}%")
+            m2.metric(
+                "Model agreement",
+                "Yes" if model_agreement else "No"
+            )
+            m3.metric(
+                "Distance from 50% threshold",
+                f"{threshold_distance:.1%}"
+            )
+            m4.metric(
+                "Fields supplied",
+                f"{len(required_fields) - len(missing_fields)}/{len(required_fields)}"
+            )
+
+            if missing_fields:
                 st.warning(
-                    "The two models classify this sample differently. This is a "
-                    "useful point for review: model choice can affect the output."
+                    "Some expected profile fields are missing: "
+                    + ", ".join(readable_feature_name(x) for x in missing_fields)
                 )
             else:
-                st.info(
-                    "Both models produce the same class for this sample. Their "
-                    "probability estimates may still differ."
+                st.success(
+                    "All expected input fields are present. This checks completeness "
+                    "only; it does not establish that the information is accurate."
                 )
 
-            st.markdown("### What happens next?")
-            next1, next2, next3 = st.columns(3)
-            with next1:
-                st.markdown(
-                    "<div class='section-card'><div class='eyebrow'>01 · EXPLAIN</div>"
-                    "<h4>Understand the output</h4><div class='small-muted'>"
-                    "Open Explainable AI to inspect SHAP and LIME contributions."
-                    "</div></div>",
-                    unsafe_allow_html=True
+            if threshold_distance < 0.10:
+                st.warning(
+                    "This output is relatively close to the model's 0.50 classification "
+                    "threshold. Small changes in input or model behaviour may change "
+                    "the predicted class."
                 )
-            with next2:
-                st.markdown(
-                    "<div class='section-card'><div class='eyebrow'>02 · REVIEW</div>"
-                    "<h4>Apply human oversight</h4><div class='small-muted'>"
-                    "Open Credit Officer Review to record a research review."
-                    "</div></div>",
-                    unsafe_allow_html=True
+
+            result_tab, compare_tab, drivers_tab, technical_tab = st.tabs([
+                "Assessment result",
+                "Model comparison",
+                "Key contributing factors",
+                "Technical details"
+            ])
+
+            with result_tab:
+                left_result, right_result = st.columns([1.15, 1])
+                with left_result:
+                    st.markdown("### Primary model classification")
+                    if assessment["prediction"] == 1:
+                        st.error("Gradient Boosting: Higher-risk class")
+                    else:
+                        st.success("Gradient Boosting: Lower-risk class")
+                    show_risk_gauge(assessment["bad_probability"])
+                    st.caption(
+                        "The classification uses a 0.50 threshold on the model's "
+                        "predicted bad-credit class probability."
+                    )
+                with right_result:
+                    st.markdown("### Probability distribution")
+                    probability_df = pd.DataFrame({
+                        "Class": ["Good-credit class", "Bad-credit class"],
+                        "Model probability": [
+                            assessment["good_probability"],
+                            assessment["bad_probability"]
+                        ]
+                    }).set_index("Class")
+                    st.bar_chart(probability_df, horizontal=True)
+                    st.caption(
+                        "These are model class probabilities, not calibrated estimates "
+                        "of an individual Ugandan applicant's real-world default risk."
+                    )
+
+                st.markdown("### Assessment interpretation")
+                if assessment["prediction"] == 1:
+                    st.markdown(
+                        "<div class='explanation-callout'><b>Model output:</b> "
+                        "The Gradient Boosting model assigns this sample to its "
+                        "bad-credit class. This is a statistical classification, "
+                        "not a loan rejection recommendation.</div>",
+                        unsafe_allow_html=True
+                    )
+                else:
+                    st.markdown(
+                        "<div class='explanation-callout'><b>Model output:</b> "
+                        "The Gradient Boosting model assigns this sample to its "
+                        "good-credit class. This is a statistical classification, "
+                        "not a loan approval recommendation.</div>",
+                        unsafe_allow_html=True
+                    )
+
+            with compare_tab:
+                st.markdown("### Compare the two trained models")
+                comparison_df = pd.DataFrame({
+                    "Model": ["Gradient Boosting", "Logistic Regression"],
+                    "Predicted class": [
+                        risk_label(assessment["prediction"]),
+                        risk_label(assessment["logistic_prediction"])
+                    ],
+                    "Bad-credit class probability": [
+                        assessment["bad_probability"],
+                        assessment["logistic_bad_probability"]
+                    ]
+                })
+                st.dataframe(
+                    comparison_df,
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "Bad-credit class probability": st.column_config.ProgressColumn(
+                            "Bad-credit class probability",
+                            min_value=0,
+                            max_value=1,
+                            format="%.1%%"
+                        )
+                    }
                 )
-            with next3:
-                st.markdown(
-                    "<div class='section-card'><div class='eyebrow'>03 · DOCUMENT</div>"
-                    "<h4>Discuss limitations</h4><div class='small-muted'>"
-                    "Record that the benchmark is not validated on Ugandan loan data."
-                    "</div></div>",
-                    unsafe_allow_html=True
+                comparison_chart = pd.DataFrame({
+                    "Model": ["Gradient Boosting", "Logistic Regression"],
+                    "Bad-credit probability": [
+                        assessment["bad_probability"],
+                        assessment["logistic_bad_probability"]
+                    ]
+                }).set_index("Model")
+                st.bar_chart(comparison_chart, horizontal=True)
+                if model_agreement:
+                    st.success(
+                        "Both models return the same class for this sample. "
+                        "Their probability estimates are not identical."
+                    )
+                else:
+                    st.warning(
+                        "The models disagree on this sample. This highlights why "
+                        "model comparison and human review matter in a credit-risk "
+                        "research workflow."
+                    )
+
+            with drivers_tab:
+                st.markdown("### What contributed to the primary model output?")
+                contribution_df = pd.DataFrame({
+                    "Feature": [
+                        readable_feature_name(name) for name in feature_names
+                    ],
+                    "SHAP contribution": assessment["shap_contributions"]
+                })
+                contribution_df["Direction"] = np.where(
+                    contribution_df["SHAP contribution"] >= 0,
+                    "Toward bad-credit class",
+                    "Toward good-credit class"
                 )
+                contribution_df["Magnitude"] = contribution_df[
+                    "SHAP contribution"
+                ].abs()
+                strongest = contribution_df.nlargest(8, "Magnitude").sort_values(
+                    "SHAP contribution"
+                )
+                st.bar_chart(
+                    strongest.set_index("Feature")[["SHAP contribution"]],
+                    horizontal=True
+                )
+                risk_factors = contribution_df[
+                    contribution_df["SHAP contribution"] > 0
+                ].nlargest(3, "Magnitude")
+                supportive_factors = contribution_df[
+                    contribution_df["SHAP contribution"] < 0
+                ].nsmallest(3, "SHAP contribution")
+
+                factor_left, factor_right = st.columns(2)
+                with factor_left:
+                    st.markdown("#### Pushes toward bad-credit class")
+                    if risk_factors.empty:
+                        st.caption("No positive SHAP contributions in this sample.")
+                    else:
+                        st.dataframe(
+                            risk_factors[["Feature", "SHAP contribution"]],
+                            use_container_width=True,
+                            hide_index=True
+                        )
+                with factor_right:
+                    st.markdown("#### Pushes toward good-credit class")
+                    if supportive_factors.empty:
+                        st.caption("No negative SHAP contributions in this sample.")
+                    else:
+                        st.dataframe(
+                            supportive_factors[["Feature", "SHAP contribution"]],
+                            use_container_width=True,
+                            hide_index=True
+                        )
+                st.caption(
+                    "SHAP contributions describe how features influence this model "
+                    "output. They are not causal effects or percentage-point changes "
+                    "in probability."
+                )
+
+            with technical_tab:
+                st.markdown("### Machine-learning pipeline")
+                pipeline_steps = [
+                    ("01 · Input", "Fictional borrower profile collected through the form."),
+                    ("02 · Preprocessing", "Missing-value imputation, numerical scaling and categorical encoding."),
+                    ("03 · Prediction", "Gradient Boosting produces class probabilities and a predicted class."),
+                    ("04 · Comparison", "Logistic Regression provides a second model output for comparison."),
+                    ("05 · Explainability", "SHAP and LIME generate local explanations of model behaviour.")
+                ]
+                for step_title, step_description in pipeline_steps:
+                    st.markdown(
+                        f"<div class='section-card'><div class='eyebrow'>{step_title}</div>"
+                        f"<div>{step_description}</div></div>",
+                        unsafe_allow_html=True
+                    )
+                st.markdown("#### Run metadata")
+                st.json({
+                    "primary_model": "GradientBoostingClassifier",
+                    "comparison_model": "LogisticRegression",
+                    "explainability_methods": ["SHAP", "LIME"],
+                    "classification_threshold": 0.50,
+                    "assessment_timestamp": assessment["created_at"],
+                    "input_feature_count": len(required_fields),
+                    "profile_completeness_percent": round(completeness, 1)
+                })
 
             st.warning(
-                "Research interpretation only: this output is based on the German "
-                "Credit benchmark dataset, not validated Ugandan bank data. It must "
-                "not be used to approve, reject, rank or price real loan applications."
+                "Research interpretation only. The models were trained using the "
+                "German Credit benchmark dataset, not validated Ugandan bank lending "
+                "data. This prototype must not be used to approve, reject, rank or "
+                "price real loan applications."
             )
 # -------------------------------------------------------------------
 # Explainable AI
