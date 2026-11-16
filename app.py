@@ -19,159 +19,70 @@ st.set_page_config(
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
-
 :root {
-    --navy: #10243A;
-    --navy-2: #183650;
-    --teal: #159A91;
-    --teal-soft: #E7F5F3;
-    --ink: #172B3A;
-    --muted: #718096;
-    --line: #E6ECF1;
-    --surface: #FFFFFF;
-    --canvas: #F5F8FA;
+ --navy:#10243A; --navy2:#183D55; --teal:#0D9488; --ink:#172B3A;
+ --muted:#718096; --line:#E5EBF0; --canvas:#F4F7FA;
 }
-html, body, [class*="css"] {
-    font-family: 'DM Sans', sans-serif;
-    color: var(--ink);
-}
-.stApp { background: var(--canvas); }
-.block-container {
-    padding-top: 1.35rem;
-    padding-bottom: 2.2rem;
-    max-width: 1380px;
-}
-h1, h2, h3, h4 {
-    font-family: 'Manrope', sans-serif !important;
-    color: var(--navy) !important;
-    letter-spacing: -0.025em;
-}
-h1 { font-weight: 800 !important; font-size: 2.05rem !important; line-height: 1.16 !important; }
-h2, h3 { font-weight: 700 !important; }
-h2 { font-size: 1.45rem !important; }
-h3 { font-size: 1.12rem !important; }
-p, [data-testid="stMarkdownContainer"] { line-height: 1.55; }
-[data-testid="stSidebar"] {
-    background: var(--navy);
-    border-right: 1px solid #203B53;
-}
-[data-testid="stSidebar"] * { color: #F4F8FB !important; }
+html, body, [class*="css"] {font-family:'DM Sans',sans-serif;color:var(--ink);}
+.stApp {background:var(--canvas);}
+.block-container {max-width:1420px;padding-top:1.6rem;padding-bottom:3rem;}
+h1,h2,h3,h4 {font-family:'Manrope',sans-serif!important;color:var(--navy)!important;letter-spacing:-.03em;}
+h1 {font-size:2.1rem!important;font-weight:800!important;}
+h2 {font-size:1.45rem!important;font-weight:750!important;}
+h3 {font-size:1.12rem!important;font-weight:750!important;}
+[data-testid="stSidebar"] {background:#0D2034;border-right:1px solid #203B53;}
+[data-testid="stSidebar"] * {color:#F4F8FB!important;}
 [data-testid="stSidebar"] [data-testid="stRadio"] label {
-    padding: 0.68rem 0.75rem;
-    border-radius: 10px;
-    margin: 0.16rem 0;
-    font-size: 0.91rem;
+ padding:.72rem .8rem;border-radius:12px;margin:.18rem 0;font-size:.91rem;
 }
-[data-testid="stSidebar"] [data-testid="stRadio"] label:hover {
-    background: rgba(255,255,255,0.09);
-}
-[data-testid="stSidebar"] [data-testid="stRadio"] label > div:first-child {
-    display: none;
-}
+[data-testid="stSidebar"] [data-testid="stRadio"] label:hover {background:rgba(255,255,255,.08);}
+[data-testid="stSidebar"] [data-testid="stRadio"] label > div:first-child {display:none;}
 [data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked) {
-    background: rgba(21,154,145,0.22);
-    border: 1px solid rgba(127,224,212,0.24);
+ background:rgba(13,148,136,.24);border:1px solid rgba(94,234,212,.24);
 }
-[data-testid="stSidebar"] hr { border-color: #365067; }
-[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
-    color: #B9C9D6 !important;
-}
+[data-testid="stSidebar"] hr {border-color:#365067;}
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {color:#B9C9D6!important;}
 div[data-testid="stMetric"] {
-    background: white;
-    border: 1px solid var(--line);
-    padding: 14px 16px;
-    border-radius: 12px;
-    box-shadow: 0 3px 12px rgba(16,36,58,0.025);
+ background:#fff;border:1px solid var(--line);padding:17px 19px;border-radius:16px;
+ box-shadow:0 5px 18px rgba(16,36,58,.035);
 }
-div[data-testid="stMetricValue"] { font-size: 1.8rem; }
-div[data-testid="stMetricLabel"] { color: var(--muted) !important; }
-div[data-testid="stMetricValue"] {
-    color: var(--navy) !important;
-    font-family: 'Manrope', sans-serif;
-    font-weight: 800;
+div[data-testid="stMetricLabel"] {color:var(--muted)!important;}
+div[data-testid="stMetricValue"] {color:var(--navy)!important;font-family:'Manrope',sans-serif;font-weight:800;}
+.stButton>button,.stFormSubmitButton>button {
+ background:var(--teal);color:white;border:1px solid var(--teal);border-radius:11px;
+ font-weight:700;padding:.62rem 1rem;min-height:2.8rem;transition:all .15s ease;
 }
-.stButton > button, .stFormSubmitButton > button {
-    background: var(--teal);
-    color: white;
-    border: 1px solid var(--teal);
-    border-radius: 9px;
-    font-weight: 700;
-    padding: 0.58rem 1rem;
-    min-height: 2.7rem;
-}
-.stButton > button:hover, .stFormSubmitButton > button:hover {
-    background: #117F78;
-    border-color: #117F78;
-    color: white;
-}
-.stTextInput input, .stNumberInput input, .stTextArea textarea,
-.stSelectbox [data-baseweb="select"] {
-    border-radius: 9px;
-}
+.stButton>button:hover,.stFormSubmitButton>button:hover {background:#0F766E;border-color:#0F766E;color:white;}
+.stTextInput input,.stNumberInput input,.stTextArea textarea,
+.stSelectbox [data-baseweb="select"] {border-radius:10px!important;}
 [data-testid="stForm"] {
-    background: white;
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 1.2rem 1.3rem;
+ background:#fff;border:1px solid var(--line);border-radius:18px;
+ padding:1.4rem 1.5rem;box-shadow:0 6px 22px rgba(16,36,58,.035);
 }
-div[data-testid="stAlert"] { border-radius: 11px; }
-[data-testid="stDataFrame"] {
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    overflow: hidden;
-}
-hr { border-color: var(--line); }
-.eyebrow {
-    color: var(--teal);
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    margin-bottom: 0.35rem;
-}
-.page-subtitle {
-    color: #718096;
-    font-size: 0.98rem;
-    margin-top: -0.45rem;
-    margin-bottom: 1.4rem;
-}
+div[data-testid="stAlert"] {border-radius:13px;}
+[data-testid="stDataFrame"] {border:1px solid var(--line);border-radius:13px;overflow:hidden;}
+hr {border-color:var(--line);}
+.eyebrow {color:var(--teal);font-size:.7rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;margin-bottom:.4rem;}
+.page-subtitle {color:var(--muted);font-size:.97rem;margin-top:-.4rem;margin-bottom:1.45rem;}
 .hero {
-    background: linear-gradient(115deg, #10243A 0%, #183D55 68%, #147C78 100%);
-    border-radius: 16px;
-    padding: 1.35rem 1.6rem;
-    color: white;
-    margin: 0.35rem 0 1.1rem 0;
-    box-shadow: 0 8px 22px rgba(16,36,58,0.10);
+ background:linear-gradient(115deg,#10243A 0%,#183D55 66%,#0F766E 100%);
+ border-radius:20px;padding:1.65rem 1.8rem;color:white;margin:.35rem 0 1.2rem 0;
+ box-shadow:0 12px 30px rgba(16,36,58,.12);
 }
-.hero h2 { color: white !important; margin: 0.2rem 0 0.35rem 0; font-size: 1.65rem !important; }
-.hero p { color: #D5E3EB; margin: 0; font-size: 0.93rem; max-width: 850px; }
-.hero .eyebrow { color: #7FE0D4; }
-.section-card {
-    background: white;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 0.95rem 1.05rem;
-    margin-bottom: 0.65rem;
-    box-shadow: 0 2px 10px rgba(16,36,58,0.025);
+.hero h2 {color:white!important;margin:.2rem 0 .45rem 0;font-size:1.7rem!important;}
+.hero p {color:#D5E3EB;margin:0;font-size:.95rem;max-width:850px;}
+.hero .eyebrow {color:#7FE0D4;}
+.section-card {background:#fff;border:1px solid var(--line);border-radius:16px;padding:1.1rem 1.2rem;margin-bottom:.75rem;box-shadow:0 4px 16px rgba(16,36,58,.025);}
+.section-card h4 {margin:0 0 .4rem 0;}
+.small-muted {color:var(--muted);font-size:.86rem;}
+.form-section {
+ background:#F8FAFC;border:1px solid #E8EEF3;border-radius:14px;
+ padding:1rem 1.1rem;margin:.55rem 0 .9rem 0;
 }
-.section-card h4 { margin: 0 0 0.4rem 0; }
-.small-muted { color: #718096; font-size: 0.86rem; }
-.status-pill {
-    display: inline-block;
-    border-radius: 999px;
-    padding: 0.28rem 0.7rem;
-    font-size: 0.78rem;
-    font-weight: 700;
-    background: #E7F5F3;
-    color: #117F78;
-}
-.footer-note {
-    color: #8392A1;
-    font-size: 0.78rem;
-    border-top: 1px solid var(--line);
-    padding-top: 0.9rem;
-    margin-top: 2.2rem;
-}
+.form-section-title {font-family:'Manrope',sans-serif;color:#10243A;font-weight:800;font-size:1rem;margin-bottom:.18rem;}
+.form-section-help {color:#718096;font-size:.82rem;margin-bottom:.65rem;}
+.field-help {color:#718096;font-size:.78rem;}
+.footer-note {color:#8392A1;font-size:.78rem;border-top:1px solid var(--line);padding-top:.9rem;margin-top:2.2rem;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -371,74 +282,248 @@ if page == "Dashboard":
 elif page == "Borrower Registration":
     page_heading(
         "BORROWER INTAKE",
-        "Borrower registration",
-        "Create a fictional applicant record for the research demonstration."
+        "Register a sample borrower",
+        "Complete the four short sections below. Use fictional information only."
+    )
+
+    st.markdown(
+        "<div class='hero'>"
+        "<div class='eyebrow'>GUIDED REGISTRATION</div>"
+        "<h2>Let's build the applicant profile.</h2>"
+        "<p>Enter the applicant's personal profile, employment and finances, "
+        "credit history and requested loan details. The form uses fields from "
+        "the German Credit research dataset.</p></div>",
+        unsafe_allow_html=True
     )
     st.info(
-        "The fields below come from the German Credit benchmark dataset. "
-        "They are not a complete Ugandan loan application form."
+        "Important: this is a research demonstration form, not a real Ugandan "
+        "bank application. The benchmark dataset uses some categories and "
+        "definitions that may differ from local banking practice."
     )
+
+    # Translate technical dataset names into clear form labels.
+    field_labels = {
+        "checking_status": "Bank account status",
+        "duration": "Loan term (months)",
+        "credit_history": "Previous credit repayment history",
+        "purpose": "Purpose of the loan",
+        "credit_amount": "Requested loan amount (dataset units)",
+        "savings_status": "Savings level",
+        "employment": "Length of current employment",
+        "installment_commitment": "Installment burden (dataset scale: 1–4)",
+        "personal_status": "Personal / marital status category",
+        "other_parties": "Co-applicant or guarantor",
+        "residence_since": "Years at current residence (dataset scale)",
+        "property_magnitude": "Property or asset category",
+        "age": "Age (years)",
+        "other_payment_plans": "Other active payment plans",
+        "housing": "Housing arrangement",
+        "existing_credits": "Number of existing credits",
+        "job": "Employment / occupation category",
+        "num_dependents": "Number of dependants",
+        "own_telephone": "Telephone ownership",
+        "foreign_worker": "Foreign-worker category"
+    }
+    field_help = {
+        "checking_status": "The account-balance category recorded in the benchmark dataset.",
+        "duration": "Enter the requested repayment period in months.",
+        "credit_history": "A summary category of the applicant's previous credit repayment record.",
+        "purpose": "The reason the applicant is requesting the loan.",
+        "credit_amount": "The amount field is in the benchmark dataset's original units, not a live currency quote.",
+        "savings_status": "The savings category recorded in the benchmark dataset.",
+        "employment": "How long the applicant has been employed.",
+        "installment_commitment": "A coded benchmark measure. It is not a percentage or an affordability calculation.",
+        "personal_status": "A coded demographic category from the original benchmark dataset.",
+        "other_parties": "Whether another party is recorded on the credit agreement.",
+        "residence_since": "A coded measure of how long the applicant has lived at the current address.",
+        "property_magnitude": "The asset or property category recorded in the benchmark dataset.",
+        "age": "Enter age in whole years.",
+        "other_payment_plans": "Whether other payment arrangements are recorded.",
+        "housing": "The applicant's housing category in the benchmark dataset.",
+        "existing_credits": "Number of existing credits recorded in the dataset.",
+        "job": "The occupation category used by the benchmark dataset.",
+        "num_dependents": "Number of dependants recorded in the dataset.",
+        "own_telephone": "Whether a telephone is recorded as owned.",
+        "foreign_worker": "A category retained from the original benchmark dataset."
+    }
+
+    # Where the original dataset uses A-codes, show a readable description
+    # while retaining the original code as the value sent to the model.
+    category_descriptions = {
+        "checking_status": {
+            "A11": "Overdrawn / below 0",
+            "A12": "Low balance (0 to below 200)",
+            "A13": "Balance of 200 or more",
+            "A14": "No checking account"
+        },
+        "credit_history": {
+            "A30": "No previous credits / all paid",
+            "A31": "Previous credits paid at this bank",
+            "A32": "Existing credits repaid as agreed",
+            "A33": "Previous delays in repayment",
+            "A34": "Critical or other credit history"
+        },
+        "purpose": {
+            "A40": "New car", "A41": "Used car", "A42": "Furniture or equipment",
+            "A43": "Radio or television", "A44": "Domestic appliances",
+            "A45": "Repairs", "A46": "Education", "A47": "Holiday",
+            "A48": "Retraining", "A49": "Business", "A410": "Other"
+        },
+        "savings_status": {
+            "A61": "Below 100", "A62": "100 to below 500",
+            "A63": "500 to below 1,000", "A64": "1,000 or more",
+            "A65": "Unknown / no savings account"
+        },
+        "employment": {
+            "A71": "Unemployed", "A72": "Less than 1 year",
+            "A73": "1 to less than 4 years", "A74": "4 to less than 7 years",
+            "A75": "7 years or more"
+        },
+        "personal_status": {
+            "A91": "Male: divorced or separated",
+            "A92": "Female: divorced, separated or married",
+            "A93": "Male: single", "A94": "Male: married or widowed",
+            "A95": "Female: single"
+        },
+        "other_parties": {
+            "A101": "No additional party", "A102": "Co-applicant",
+            "A103": "Guarantor"
+        },
+        "property_magnitude": {
+            "A121": "Real estate", "A122": "Building society savings / life insurance",
+            "A123": "Car or other assets", "A124": "Unknown / no property"
+        },
+        "other_payment_plans": {
+            "A141": "Bank", "A142": "Stores", "A143": "None"
+        },
+        "housing": {
+            "A151": "Rent", "A152": "Own home", "A153": "Living free of rent"
+        },
+        "job": {
+            "A171": "Unemployed / unskilled non-resident",
+            "A172": "Unskilled resident", "A173": "Skilled employee / official",
+            "A174": "Management / self-employed / highly qualified"
+        },
+        "own_telephone": {"A191": "No", "A192": "Yes"},
+        "foreign_worker": {"A201": "Yes", "A202": "No"}
+    }
+
     with st.form("borrower_registration"):
         st.markdown("#### Applicant reference")
         reference = st.text_input(
-            "Demonstration reference",
+            "Application reference",
             value="UG-DEMO-001",
-            help="Use a fictional reference. Do not enter real personal information."
+            help="Use a fictional reference such as UG-DEMO-001. Do not enter a real name, phone number or national ID."
         )
-        st.markdown("---")
-        st.markdown("#### Borrower and credit profile")
         values = {}
-        left, right = st.columns(2)
+
+        sections = [
+            (
+                "1. Personal profile",
+                "Basic details used by the benchmark model.",
+                ["age", "personal_status", "housing", "residence_since",
+                 "num_dependents", "own_telephone", "foreign_worker"]
+            ),
+            (
+                "2. Employment and financial position",
+                "Employment, savings and account information.",
+                ["employment", "job", "checking_status", "savings_status",
+                 "property_magnitude"]
+            ),
+            (
+                "3. Credit history",
+                "Existing credit commitments and repayment background.",
+                ["credit_history", "existing_credits", "other_parties",
+                 "other_payment_plans", "installment_commitment"]
+            ),
+            (
+                "4. Requested loan",
+                "The requested amount, purpose and repayment period.",
+                ["purpose", "credit_amount", "duration"]
+            )
+        ]
+
         defaults = {
-            "duration": 24,
-            "credit_amount": 2500,
-            "installment_commitment": 2,
-            "residence_since": 2,
-            "age": 35,
-            "existing_credits": 1,
-            "num_dependents": 1
+            "duration": 24, "credit_amount": 2500,
+            "installment_commitment": 2, "residence_since": 2,
+            "age": 35, "existing_credits": 1, "num_dependents": 1
         }
-        for index, feature in enumerate(original_features):
-            column = left if index % 2 == 0 else right
-            with column:
-                label = feature.replace("_", " ").title()
-                if feature in numerical_features:
-                    minimum = 1 if feature in (
-                        "duration", "credit_amount", "age"
-                    ) else 0
-                    default = max(minimum, defaults.get(feature, 1))
-                    values[feature] = st.number_input(
-                        label,
-                        min_value=minimum,
-                        value=default,
-                        step=1,
-                        key=f"input_{feature}"
+
+        for section_title, section_description, features in sections:
+            st.markdown(
+                f"<div class='form-section'>"
+                f"<div class='form-section-title'>{section_title}</div>"
+                f"<div class='form-section-help'>{section_description}</div>"
+                f"</div>",
+                unsafe_allow_html=True
+            )
+            left, right = st.columns(2, gap="large")
+            for index, feature in enumerate(features):
+                column = left if index % 2 == 0 else right
+                with column:
+                    label = field_labels.get(
+                        feature, feature.replace("_", " ").title()
                     )
-                else:
-                    options = list(categorical_options[feature])
-                    values[feature] = st.selectbox(
-                        label,
-                        options=options,
-                        format_func=lambda value: str(value),
-                        key=f"input_{feature}"
-                    )
+                    help_text = field_help.get(feature, "")
+                    if feature in numerical_features:
+                        minimum = 1 if feature in (
+                            "duration", "credit_amount", "age"
+                        ) else 0
+                        default = max(minimum, defaults.get(feature, 1))
+                        values[feature] = st.number_input(
+                            label,
+                            min_value=minimum,
+                            value=default,
+                            step=1,
+                            help=help_text,
+                            key=f"input_{feature}"
+                        )
+                    else:
+                        options = list(categorical_options[feature])
+                        descriptions = category_descriptions.get(feature, {})
+                        def display_category(value, descriptions=descriptions):
+                            raw = str(value)
+                            if raw in descriptions:
+                                return f"{descriptions[raw]}  ({raw})"
+                            return raw.replace("_", " ").replace("-", " ").title()
+                        values[feature] = st.selectbox(
+                            label,
+                            options=options,
+                            format_func=display_category,
+                            help=help_text,
+                            key=f"input_{feature}"
+                        )
+
         st.markdown("---")
+        confirm = st.checkbox(
+            "I confirm this is fictional demonstration information.",
+            value=False
+        )
         submitted = st.form_submit_button(
-            "Save borrower details",
-            use_container_width=True
+            "Save applicant profile",
+            use_container_width=True,
+            disabled=False
         )
 
     if submitted:
         if not reference.strip():
-            st.error("Enter a demonstration reference.")
+            st.error("Please enter an application reference.")
+        elif not confirm:
+            st.error("Please confirm that the information is fictional.")
         else:
             st.session_state.borrower = {
                 "reference": reference.strip(),
                 "values": values
             }
             st.session_state.assessment = None
-            st.success("Borrower details saved for this session.")
-            st.caption(f"Saved reference: {reference.strip()}")
+            st.success("Applicant profile saved successfully.")
+            st.markdown(
+                f"<div class='section-card'><div class='eyebrow'>PROFILE SAVED</div>"
+                f"<h3 style='margin:0'>{reference.strip()}</h3>"
+                f"<div class='small-muted'>You can now open Credit Risk Assessment "
+                f"to run the model.</div></div>",
+                unsafe_allow_html=True
+            )
 
 # -------------------------------------------------------------------
 # Credit risk assessment
