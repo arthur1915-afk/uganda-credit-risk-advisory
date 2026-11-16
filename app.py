@@ -303,23 +303,23 @@ elif page == "Borrower Registration":
 
     # Translate technical dataset names into clear form labels.
     field_labels = {
-        "checking_status": "Current bank account balance category",
+        "checking_status": "Bank account situation",
         "duration": "Loan term (months)",
         "credit_history": "Previous credit repayment history",
         "purpose": "Purpose of the loan",
         "credit_amount": "Requested loan amount (dataset units)",
-        "savings_status": "Savings balance category",
-        "employment": "Length of current employment",
+        "savings_status": "Savings amount category",
+        "employment": "How long has the applicant been employed?",
         "installment_commitment": "Installment burden (dataset scale: 1–4)",
         "personal_status": "Personal / marital status category",
         "other_parties": "Co-applicant or guarantor",
         "residence_since": "Years at current residence (dataset scale)",
-        "property_magnitude": "Property or assets owned",
+        "property_magnitude": "Property or other assets owned",
         "age": "Age (years)",
         "other_payment_plans": "Other active payment plans",
         "housing": "Housing arrangement",
         "existing_credits": "Number of existing credits",
-        "job": "Employment / occupation category",
+        "job": "What kind of work does the applicant do?",
         "num_dependents": "Number of dependants",
         "own_telephone": "Telephone ownership",
         "foreign_worker": "Foreign-worker category"
@@ -351,10 +351,10 @@ elif page == "Borrower Registration":
     # while retaining the original code as the value sent to the model.
     category_descriptions = {
         "checking_status": {
-            "A11": "Overdrawn / below 0",
-            "A12": "Low balance (0 to below 200)",
-            "A13": "Balance of 200 or more",
-            "A14": "No checking account"
+            "A11": "Account is overdrawn",
+            "A12": "Small positive balance",
+            "A13": "Higher account balance",
+            "A14": "Does not have a checking account"
         },
         "credit_history": {
             "A30": "No previous credits / all paid",
@@ -370,14 +370,14 @@ elif page == "Borrower Registration":
             "A48": "Retraining", "A49": "Business", "A410": "Other"
         },
         "savings_status": {
-            "A61": "Below 100", "A62": "100 to below 500",
-            "A63": "500 to below 1,000", "A64": "1,000 or more",
-            "A65": "Unknown / no savings account"
+            "A61": "Less than 100", "A62": "Between 100 and 499",
+            "A63": "Between 500 and 999", "A64": "1,000 or more",
+            "A65": "No savings account / balance not recorded"
         },
         "employment": {
-            "A71": "Unemployed", "A72": "Less than 1 year",
-            "A73": "1 to less than 4 years", "A74": "4 to less than 7 years",
-            "A75": "7 years or more"
+            "A71": "Not currently employed", "A72": "Employed for less than 1 year",
+            "A73": "Employed for 1–3 years", "A74": "Employed for 4–6 years",
+            "A75": "Employed for 7 years or more"
         },
         "personal_status": {
             "A91": "Male: divorced or separated",
@@ -425,8 +425,8 @@ elif page == "Borrower Registration":
                  "num_dependents", "own_telephone", "foreign_worker"]
             ),
             (
-                "2. Work, bank account and savings",
-                "Tell us about the applicant’s job, current account balance category, savings and assets.",
+                "2. Employment and financial position",
+                "Tell us about the applicant’s work, bank account, savings and assets.",
                 ["employment", "job", "checking_status", "savings_status",
                  "property_magnitude"]
             ),
@@ -507,7 +507,7 @@ elif page == "Borrower Registration":
                         def display_category(value, descriptions=descriptions):
                             raw = str(value)
                             if raw in descriptions:
-                                return f"{descriptions[raw]}  ({raw})"
+                                return descriptions[raw]
                             return raw.replace("_", " ").replace("-", " ").title()
                         values[feature] = st.selectbox(
                             label,
