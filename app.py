@@ -303,18 +303,18 @@ elif page == "Borrower Registration":
 
     # Translate technical dataset names into clear form labels.
     field_labels = {
-        "checking_status": "Bank account status",
+        "checking_status": "Current bank account balance category",
         "duration": "Loan term (months)",
         "credit_history": "Previous credit repayment history",
         "purpose": "Purpose of the loan",
         "credit_amount": "Requested loan amount (dataset units)",
-        "savings_status": "Savings level",
+        "savings_status": "Savings balance category",
         "employment": "Length of current employment",
         "installment_commitment": "Installment burden (dataset scale: 1–4)",
         "personal_status": "Personal / marital status category",
         "other_parties": "Co-applicant or guarantor",
         "residence_since": "Years at current residence (dataset scale)",
-        "property_magnitude": "Property or asset category",
+        "property_magnitude": "Property or assets owned",
         "age": "Age (years)",
         "other_payment_plans": "Other active payment plans",
         "housing": "Housing arrangement",
@@ -325,18 +325,18 @@ elif page == "Borrower Registration":
         "foreign_worker": "Foreign-worker category"
     }
     field_help = {
-        "checking_status": "The account-balance category recorded in the benchmark dataset.",
+        "checking_status": "Choose the range that best matches the account balance category shown. This is a coded benchmark category, not a live bank balance check.",
         "duration": "Enter the requested repayment period in months.",
         "credit_history": "A summary category of the applicant's previous credit repayment record.",
         "purpose": "The reason the applicant is requesting the loan.",
         "credit_amount": "The amount field is in the benchmark dataset's original units, not a live currency quote.",
-        "savings_status": "The savings category recorded in the benchmark dataset.",
+        "savings_status": "Choose the savings range shown in the benchmark dataset. The options are categories, not an exact amount entry.",
         "employment": "How long the applicant has been employed.",
         "installment_commitment": "A coded benchmark measure. It is not a percentage or an affordability calculation.",
         "personal_status": "A coded demographic category from the original benchmark dataset.",
         "other_parties": "Whether another party is recorded on the credit agreement.",
         "residence_since": "A coded measure of how long the applicant has lived at the current address.",
-        "property_magnitude": "The asset or property category recorded in the benchmark dataset.",
+        "property_magnitude": "Select the property or asset category recorded by the benchmark dataset. It does not calculate the value of assets.",
         "age": "Enter age in whole years.",
         "other_payment_plans": "Whether other payment arrangements are recorded.",
         "housing": "The applicant's housing category in the benchmark dataset.",
@@ -425,8 +425,8 @@ elif page == "Borrower Registration":
                  "num_dependents", "own_telephone", "foreign_worker"]
             ),
             (
-                "2. Employment and financial position",
-                "Employment, savings and account information.",
+                "2. Work, bank account and savings",
+                "Tell us about the applicant’s job, current account balance category, savings and assets.",
                 ["employment", "job", "checking_status", "savings_status",
                  "property_magnitude"]
             ),
