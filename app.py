@@ -653,40 +653,90 @@ elif page == "Credit Risk Assessment":
     page_heading(
         "MODEL ASSESSMENT",
         "Credit risk assessment",
-        "Generate and inspect a Gradient Boosting model classification."
+        "Review the sample applicant, run the benchmark model and inspect its output."
     )
+    research_notice()
     borrower = st.session_state.borrower
+
     if borrower is None:
-        st.info("Register a demonstration borrower before running an assessment.")
-    else:
         st.markdown(
-            f"<div class='section-card'><div class='eyebrow'>CURRENT APPLICANT</div>"
+            "<div class='section-card'><div class='eyebrow'>NEXT STEP</div>"
+            "<h3>Start with a borrower profile</h3>"
+            "<div class='small-muted'>Register a fictional applicant before running "
+            "the model assessment.</div></div>",
+            unsafe_allow_html=True
+        )
+    else:
+        profile = borrower["values"]
+        st.markdown(
+            f"<div class='section-card'><div class='eyebrow'>ASSESSMENT FILE</div>"
             f"<h3 style='margin:0'>{borrower['reference']}</h3>"
-            f"<div class='small-muted'>Borrower details are stored for this "
-            f"browser session only.</div></div>",
+            f"<div class='small-muted'>Created from a fictional applicant profile · "
+            f"Session-only record</div></div>",
             unsafe_allow_html=True
         )
 
-        profile = borrower["values"]
-        with st.expander("Preview applicant profile", expanded=True):
-            p1, p2, p3 = st.columns(3)
-            p1.metric("Applicant age", f"{int(profile.get('age', 0))} years")
-            p2.metric("Loan term", f"{int(profile.get('duration', 0))} months")
-            p3.metric("Requested amount", f"{profile.get('credit_amount', '—')} dataset units")
-            st.caption(
-                "These are selected fields from the fictional applicant profile. "
-                "The amount is shown in original benchmark dataset units, not UGX."
+        st.markdown("### Applicant snapshot")
+        snap1, snap2, snap3, snap4 = st.columns(4)
+        snap1.metric("Age", f"{int(profile.get('age', 0))} years")
+        snap2.metric("Loan term", f"{int(profile.get('duration', 0))} months")
+        snap3.metric(
+            "Requested amount",
+            f"{profile.get('credit_amount', '—'):,}" if isinstance(
+                profile.get("credit_amount"), (int, float, np.integer, np.floating)
+            ) else str(profile.get("credit_amount", "—"))
+        )
+        snap4.metric("Existing credits", str(profile.get("existing_credits", "—")))
+        st.caption(
+            "Requested amount is expressed in the German Credit dataset's original "
+            "units. It is not an amount in UGX or a live financial value."
+        )
+
+        with st.expander("Review full applicant information", expanded=False):
+            profile_rows = []
+            for feature in original_features:
+                value = profile.get(feature, "—")
+                profile_rows.append({
+                    "Applicant information": readable_feature_name(feature),
+                    "Recorded value": str(value)
+                })
+            st.dataframe(
+                pd.DataFrame(profile_rows),
+                use_container_width=True,
+                hide_index=True
             )
-        if st.button("Run credit risk assessment", type="primary"):
+
+        st.markdown("### Run assessment")
+        run_col, info_col = st.columns([1, 2])
+        with run_col:
+            run_assessment = st.button(
+                "Run model assessment",
+                type="primary",
+                use_container_width=True
+            )
+        with info_col:
+            st.markdown(
+                "<div class='small-muted' style='padding:.65rem 0'>"
+                "The Gradient Boosting model is the primary model. "
+                "The assessment also records a Logistic Regression comparison.</div>",
+                unsafe_allow_html=True
+            )
+
+        if run_assessment:
             try:
-                row = pd.DataFrame([borrower["values"]])[original_features]
+                row = pd.DataFrame([profile])[original_features]
                 transformed = preprocessor.transform(row)
                 transformed_df = pd.DataFrame(
                     transformed, columns=feature_names
                 )
+
                 prediction = int(gradient_model.predict(transformed_df)[0])
                 probabilities = gradient_model.predict_proba(transformed_df)[0]
                 bad_probability = float(probabilities[1])
+
+                # Secondary model comparison for the research prototype.
+                logistic_prediction = int(logistic_model.predict(transformed_df)[0])
+                logistic_probabilities = logistic_model.predict_proba(transformed_df)[0]
 
                 shap_result = shap_explainer(transformed_df)
                 shap_values = np.asarray(shap_result.values)
@@ -712,6 +762,8 @@ elif page == "Credit Risk Assessment":
                     "prediction": prediction,
                     "bad_probability": bad_probability,
                     "good_probability": float(probabilities[0]),
+                    "logistic_prediction": logistic_prediction,
+                    "logistic_bad_probability": float(logistic_probabilities[1]),
                     "shap_contributions": shap_contributions,
                     "lime_result": lime_result,
                     "created_at": datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -727,33 +779,102 @@ elif page == "Credit Risk Assessment":
                 st.exception(exc)
 
         assessment = st.session_state.assessment
-        if assessment is not None:
+        if assessment is not None and assessment["reference"] == borrower["reference"]:
             st.markdown("---")
-            st.markdown("### Assessment result")
-            st.caption(
-                f"Applicant: {assessment['reference']} · "
-                f"Generated: {assessment['created_at']}"
-            )
-            a, b = st.columns(2)
-            a.metric(
-                "Bad-credit class probability",
-                f"{assessment['bad_probability']:.1%}"
-            )
-            b.metric(
-                "Good-credit class probability",
-                f"{assessment['good_probability']:.1%}"
-            )
-            if assessment["prediction"] == 1:
-                st.error("Model classification: Higher risk")
-            else:
-                st.success("Model classification: Lower risk")
-            show_risk_gauge(assessment["bad_probability"])
-            st.caption(
-                "The class uses the model's default 0.50 decision threshold. "
-                "Probabilities and classifications are benchmark-model outputs, "
-                "not lending recommendations."
-            )
+            result_left, result_right = st.columns([1.25, 1])
+            with result_left:
+                st.markdown("### Primary model result")
+                if assessment["prediction"] == 1:
+                    st.error("Gradient Boosting classification: Higher risk")
+                else:
+                    st.success("Gradient Boosting classification: Lower risk")
+                show_risk_gauge(assessment["bad_probability"])
+                st.caption(
+                    f"Assessment generated {assessment['created_at']}. "
+                    "The classification uses the model's default 0.50 threshold."
+                )
+            with result_right:
+                st.markdown("### Class probabilities")
+                st.markdown(
+                    "<div class='section-card'><div class='small-muted'>"
+                    "Good-credit class</div>"
+                    f"<h2 style='margin:.15rem 0;color:#0F766E!important'>"
+                    f"{assessment['good_probability']:.1%}</h2>"
+                    "<div class='small-muted'>Bad-credit class</div>"
+                    f"<h2 style='margin:.15rem 0;color:#B7791F!important'>"
+                    f"{assessment['bad_probability']:.1%}</h2></div>",
+                    unsafe_allow_html=True
+                )
+                st.markdown(
+                    "<div class='small-muted'>These are probabilities produced "
+                    "by the benchmark model, not the likelihood of loan default "
+                    "for a real Ugandan applicant.</div>",
+                    unsafe_allow_html=True
+                )
 
+            st.markdown("### Model comparison")
+            comp1, comp2 = st.columns(2)
+            with comp1:
+                st.markdown(
+                    "<div class='section-card'><div class='eyebrow'>PRIMARY MODEL</div>"
+                    "<h3>Gradient Boosting</h3>"
+                    f"<h2 style='margin:.2rem 0'>{risk_label(assessment['prediction'])}</h2>"
+                    f"<div class='small-muted'>Bad-credit class probability: "
+                    f"{assessment['bad_probability']:.1%}</div></div>",
+                    unsafe_allow_html=True
+                )
+            with comp2:
+                st.markdown(
+                    "<div class='section-card'><div class='eyebrow'>COMPARISON MODEL</div>"
+                    "<h3>Logistic Regression</h3>"
+                    f"<h2 style='margin:.2rem 0'>{risk_label(assessment['logistic_prediction'])}</h2>"
+                    f"<div class='small-muted'>Bad-credit class probability: "
+                    f"{assessment['logistic_bad_probability']:.1%}</div></div>",
+                    unsafe_allow_html=True
+                )
+            if assessment["prediction"] != assessment["logistic_prediction"]:
+                st.warning(
+                    "The two models classify this sample differently. This is a "
+                    "useful point for review: model choice can affect the output."
+                )
+            else:
+                st.info(
+                    "Both models produce the same class for this sample. Their "
+                    "probability estimates may still differ."
+                )
+
+            st.markdown("### What happens next?")
+            next1, next2, next3 = st.columns(3)
+            with next1:
+                st.markdown(
+                    "<div class='section-card'><div class='eyebrow'>01 · EXPLAIN</div>"
+                    "<h4>Understand the output</h4><div class='small-muted'>"
+                    "Open Explainable AI to inspect SHAP and LIME contributions."
+                    "</div></div>",
+                    unsafe_allow_html=True
+                )
+            with next2:
+                st.markdown(
+                    "<div class='section-card'><div class='eyebrow'>02 · REVIEW</div>"
+                    "<h4>Apply human oversight</h4><div class='small-muted'>"
+                    "Open Credit Officer Review to record a research review."
+                    "</div></div>",
+                    unsafe_allow_html=True
+                )
+            with next3:
+                st.markdown(
+                    "<div class='section-card'><div class='eyebrow'>03 · DOCUMENT</div>"
+                    "<h4>Discuss limitations</h4><div class='small-muted'>"
+                    "Record that the benchmark is not validated on Ugandan loan data."
+                    "</div></div>",
+                    unsafe_allow_html=True
+                )
+
+            st.warning(
+                "Research interpretation only: this output is based on the German "
+                "Credit benchmark dataset, not validated Ugandan bank data. It must "
+                "not be used to approve, reject, rank or price real loan applications."
+            )
 # -------------------------------------------------------------------
 # Explainable AI
 # -------------------------------------------------------------------
