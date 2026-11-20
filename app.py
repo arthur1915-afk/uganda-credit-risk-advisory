@@ -896,148 +896,146 @@ elif page == "Borrower Registration":
         "foreign_worker": {"A201": "Yes", "A202": "No"}
     }
 
-    with st.form("borrower_registration"):
-        st.markdown("#### Applicant reference")
-        reference = st.text_input(
-            "Application reference",
-            value="UG-DEMO-001",
-            help="Use a fictional reference such as UG-DEMO-001. Do not enter a real name, phone number or national ID."
+    st.markdown("#### Applicant reference")
+    reference = st.text_input(
+        "Application reference",
+        value="UG-DEMO-001",
+        help="Use a fictional reference such as UG-DEMO-001. Do not enter a real name, phone number or national ID."
+    )
+    values = {}
+
+    sections = [
+        (
+            "1. Personal profile",
+            "Basic details used by the benchmark model.",
+            ["age", "personal_status", "housing", "residence_since",
+             "num_dependents", "own_telephone", "foreign_worker"]
+        ),
+        (
+            "2. Work and money details",
+            "Tell us about the applicant’s job, how long they have been working, their bank account, savings and any property or other assets.",
+            ["employment", "job", "checking_status", "savings_status",
+             "property_magnitude"]
+        ),
+        (
+            "3. Credit history",
+            "Existing credit commitments and repayment background.",
+            ["credit_history", "existing_credits", "other_parties",
+             "other_payment_plans", "installment_commitment"]
+        ),
+        (
+            "4. Requested loan",
+            "The requested amount, purpose and repayment period.",
+            ["purpose", "credit_amount", "duration"]
         )
-        values = {}
+    ]
 
-        sections = [
-            (
-                "1. Personal profile",
-                "Basic details used by the benchmark model.",
-                ["age", "personal_status", "housing", "residence_since",
-                 "num_dependents", "own_telephone", "foreign_worker"]
-            ),
-            (
-                "2. Work and money details",
-                "Tell us about the applicant’s job, how long they have been working, their bank account, savings and any property or other assets.",
-                ["employment", "job", "checking_status", "savings_status",
-                 "property_magnitude"]
-            ),
-            (
-                "3. Credit history",
-                "Existing credit commitments and repayment background.",
-                ["credit_history", "existing_credits", "other_parties",
-                 "other_payment_plans", "installment_commitment"]
-            ),
-            (
-                "4. Requested loan",
-                "The requested amount, purpose and repayment period.",
-                ["purpose", "credit_amount", "duration"]
-            )
-        ]
+    defaults = {
+        "duration": 24, "credit_amount": 2500,
+        "installment_commitment": 2, "residence_since": 2,
+        "age": 35, "existing_credits": 1, "num_dependents": 1
+    }
 
-        defaults = {
-            "duration": 24, "credit_amount": 2500,
-            "installment_commitment": 2, "residence_since": 2,
-            "age": 35, "existing_credits": 1, "num_dependents": 1
-        }
-
-        for section_title, section_description, features in sections:
-            st.markdown(
-                f"<div class='form-section'>"
-                f"<div class='form-section-title'>{section_title}</div>"
-                f"<div class='form-section-help'>{section_description}</div>"
-                f"</div>",
-                unsafe_allow_html=True
-            )
-            left, right = st.columns(2, gap="large")
-            for index, feature in enumerate(features):
-                column = left if index % 2 == 0 else right
-                with column:
-                    label = field_labels.get(
-                        feature, feature.replace("_", " ").title()
+    for section_title, section_description, features in sections:
+        st.markdown(
+            f"<div class='form-section'>"
+            f"<div class='form-section-title'>{section_title}</div>"
+            f"<div class='form-section-help'>{section_description}</div>"
+            f"</div>",
+            unsafe_allow_html=True
+        )
+        left, right = st.columns(2, gap="large")
+        for index, feature in enumerate(features):
+            column = left if index % 2 == 0 else right
+            with column:
+                label = field_labels.get(
+                    feature, feature.replace("_", " ").title()
+                )
+                help_text = field_help.get(feature, "")
+                if feature in ("installment_commitment", "residence_since"):
+                    scale_help = {
+                        "installment_commitment": {
+                            1: "1 — 35% or more of disposable income",
+                            2: "2 — 25% to below 35%",
+                            3: "3 — 20% to below 25%",
+                            4: "4 — Below 20%"
+                        },
+                        "residence_since": {
+                            1: "1 — Less than 1 year",
+                            2: "2 — 1 to less than 4 years",
+                            3: "3 — 4 to less than 7 years",
+                            4: "4 — 7 years or more"
+                        }
+                    }[feature]
+                    values[feature] = st.selectbox(
+                        label,
+                        options=[1, 2, 3, 4],
+                        index=max(0, min(3, defaults.get(feature, 1) - 1)),
+                        format_func=lambda value, labels=scale_help: labels[value],
+                        help=help_text,
+                        key=f"input_{feature}"
                     )
-                    help_text = field_help.get(feature, "")
-                    if feature in ("installment_commitment", "residence_since"):
-                        scale_help = {
-                            "installment_commitment": {
-                                1: "1 — 35% or more of disposable income",
-                                2: "2 — 25% to below 35%",
-                                3: "3 — 20% to below 25%",
-                                4: "4 — Below 20%"
-                            },
-                            "residence_since": {
-                                1: "1 — Less than 1 year",
-                                2: "2 — 1 to less than 4 years",
-                                3: "3 — 4 to less than 7 years",
-                                4: "4 — 7 years or more"
-                            }
-                        }[feature]
-                        values[feature] = st.selectbox(
-                            label,
-                            options=[1, 2, 3, 4],
-                            index=max(0, min(3, defaults.get(feature, 1) - 1)),
-                            format_func=lambda value, labels=scale_help: labels[value],
-                            help=help_text,
-                            key=f"input_{feature}"
-                        )
-                    elif feature in numerical_features:
-                        minimum = 1 if feature in (
-                            "duration", "credit_amount", "age"
-                        ) else 0
-                        default = max(minimum, defaults.get(feature, 1))
-                        values[feature] = st.number_input(
-                            label,
-                            min_value=minimum,
-                            value=default,
-                            step=1,
-                            help=help_text,
-                            key=f"input_{feature}"
-                        )
-                    else:
-                        options = list(categorical_options[feature])
-                        descriptions = category_descriptions.get(feature, {})
-                        def display_category(value, descriptions=descriptions):
-                            raw = str(value)
-                            normalized = raw.strip().lower()
-                            if raw in descriptions:
-                                return descriptions[raw]
-                            if normalized in descriptions:
-                                return descriptions[normalized]
-                            return raw.replace("_", " ").replace("-", " ").title()
-                        values[feature] = st.selectbox(
-                            label,
-                            options=options,
-                            format_func=display_category,
-                            help=help_text,
-                            key=f"input_{feature}"
-                        )
+                elif feature in numerical_features:
+                    minimum = 1 if feature in (
+                        "duration", "credit_amount", "age"
+                    ) else 0
+                    default = max(minimum, defaults.get(feature, 1))
+                    values[feature] = st.number_input(
+                        label,
+                        min_value=minimum,
+                        value=default,
+                        step=1,
+                        help=help_text,
+                        key=f"input_{feature}"
+                    )
+                else:
+                    options = list(categorical_options[feature])
+                    descriptions = category_descriptions.get(feature, {})
+                    def display_category(value, descriptions=descriptions):
+                        raw = str(value)
+                        normalized = raw.strip().lower()
+                        if raw in descriptions:
+                            return descriptions[raw]
+                        if normalized in descriptions:
+                            return descriptions[normalized]
+                        return raw.replace("_", " ").replace("-", " ").title()
+                    values[feature] = st.selectbox(
+                        label,
+                        options=options,
+                        format_func=display_category,
+                        help=help_text,
+                        key=f"input_{feature}"
+                    )
 
-        st.markdown("---")
-        confirm = st.checkbox(
-            "I confirm this is fictional demonstration information.",
-            value=False
-        )
-        submitted = st.form_submit_button(
-            "Save applicant profile",
-            use_container_width=True,
-            disabled=False
-        )
+    st.markdown("---")
+    confirm = st.checkbox(
+        "I confirm this is fictional demonstration information.",
+        value=False
+    )
+    submitted = st.button(
+    "Save applicant profile",
+    use_container_width=True
+)
 
-    if submitted:
-        if not reference.strip():
-            st.error("Please enter an application reference.")
-        elif not confirm:
-            st.error("Please confirm that the information is fictional.")
-        else:
-            st.session_state.borrower = {
-                "reference": reference.strip(),
-                "values": values
-            }
-            st.session_state.assessment = None
-            st.success("Applicant profile saved successfully.")
-            st.markdown(
-                f"<div class='section-card'><div class='eyebrow'>PROFILE SAVED</div>"
-                f"<h3 style='margin:0'>{reference.strip()}</h3>"
-                f"<div class='small-muted'>You can now open Credit Risk Assessment "
-                f"to run the model.</div></div>",
-                unsafe_allow_html=True
-            )
+if submitted:
+    if not reference.strip():
+        st.error("Please enter an application reference.")
+    elif not confirm:
+        st.error("Please confirm that the information is fictional.")
+    else:
+        st.session_state.borrower = {
+            "reference": reference.strip(),
+            "values": values
+        }
+        st.session_state.assessment = None
+        st.success("Applicant profile saved successfully.")
+        st.markdown(
+            f"<div class='section-card'><div class='eyebrow'>PROFILE SAVED</div>"
+            f"<h3 style='margin:0'>{reference.strip()}</h3>"
+            f"<div class='small-muted'>You can now open Credit Risk Assessment "
+            f"to run the model.</div></div>",
+            unsafe_allow_html=True
+        )
 
 # -------------------------------------------------------------------
 # Credit risk assessment
