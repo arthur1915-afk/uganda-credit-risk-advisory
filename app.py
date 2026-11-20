@@ -764,7 +764,7 @@ elif page == "Borrower Registration":
         "savings_status": "Current savings balance",
         "employment": "How long has the applicant been working?",
         "installment_commitment": "Installment burden (dataset scale: 1–4)",
-        "personal_status": "Personal / marital status category",
+        "personal_status": "Gender and marital status",
         "other_parties": "Co-applicant or guarantor",
         "residence_since": "Years at current residence (dataset scale)",
         "property_magnitude": "Property or other assets",
@@ -786,7 +786,7 @@ elif page == "Borrower Registration":
         "savings_status": "Choose the savings range shown in the benchmark dataset. The options are categories, not an exact amount entry.",
         "employment": "How long the applicant has been employed.",
         "installment_commitment": "A coded benchmark measure. It is not a percentage or an affordability calculation.",
-        "personal_status": "A coded demographic category from the original benchmark dataset.",
+        "The original benchmark combines gender and marital status into one category. Choose the description that matches the sample profile."
         "other_parties": "Whether another party is recorded on the credit agreement.",
         "residence_since": "A coded measure of how long the applicant has lived at the current address.",
         "property_magnitude": "Select the property or asset category recorded by the benchmark dataset. It does not calculate the value of assets.",
@@ -866,10 +866,10 @@ elif page == "Borrower Registration":
             "A75": "Working for 7 years or more"
         },
         "personal_status": {
-            "A91": "Male: divorced or separated",
-            "A92": "Female: divorced, separated or married",
-            "A93": "Male: single", "A94": "Male: married or widowed",
-            "A95": "Female: single"
+            "A91": "Man — divorced or separated",
+            "A92": "Woman — married, divorced or separated",
+            "A93": "Man — single", "A94": "Man — married or widowed",
+            "A95": "Woman — single"
         },
         "other_parties": {
             "A101": "No additional party", "A102": "Co-applicant",
