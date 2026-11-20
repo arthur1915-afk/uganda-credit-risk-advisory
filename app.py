@@ -491,7 +491,14 @@ if page == "Dashboard":
         st.markdown(
             "<div class='section-card'><div class='eyebrow'>HUMAN OVERSIGHT</div>"
             f"<h3>{len(st.session_state.reviews)} review record(s)</h3>"
-            "<div# Model performance and validation
+            "<div class='small-muted'>Reviewer entries are held in the current "
+            "browser session only. They are not saved to a permanent audit database."
+            "</div></div>",
+            unsafe_allow_html=True
+        )
+
+# -------------------------------------------------------------------
+# Model performance and validation
 # -------------------------------------------------------------------
 elif page == "Model Performance & Validation":
     page_heading(
