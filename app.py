@@ -1017,25 +1017,25 @@ elif page == "Borrower Registration":
     use_container_width=True
 )
 
-if submitted:
-    if not reference.strip():
-        st.error("Please enter an application reference.")
-    elif not confirm:
-        st.error("Please confirm that the information is fictional.")
-    else:
-        st.session_state.borrower = {
-            "reference": reference.strip(),
-            "values": values
-        }
-        st.session_state.assessment = None
-        st.success("Applicant profile saved successfully.")
-        st.markdown(
-            f"<div class='section-card'><div class='eyebrow'>PROFILE SAVED</div>"
-            f"<h3 style='margin:0'>{reference.strip()}</h3>"
-            f"<div class='small-muted'>You can now open Credit Risk Assessment "
-            f"to run the model.</div></div>",
-            unsafe_allow_html=True
-        )
+    if submitted:
+        if not reference.strip():
+            st.error("Please enter an application reference.")
+        elif not confirm:
+            st.error("Please confirm that the information is fictional.")
+        else:
+            st.session_state.borrower = {
+                "reference": reference.strip(),
+                "values": values
+            }
+            st.session_state.assessment = None
+            st.success("Applicant profile saved successfully.")
+            st.markdown(
+                f"<div class='section-card'><div class='eyebrow'>PROFILE SAVED</div>"
+                f"<h3 style='margin:0'>{reference.strip()}</h3>"
+                f"<div class='small-muted'>You can now open Credit Risk Assessment "
+                f"to run the model.</div></div>",
+                unsafe_allow_html=True
+            )
 
 # -------------------------------------------------------------------
 # Credit risk assessment
