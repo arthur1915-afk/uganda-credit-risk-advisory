@@ -911,8 +911,8 @@ elif page == "Borrower Registration":
                  "num_dependents", "own_telephone", "foreign_worker"]
             ),
             (
-                "2. Employment and financial position",
-                "Tell us about the applicant’s work, bank account, savings and assets.",
+                "2. Work and money details",
+                "Tell us about the applicant’s job, how long they have been working, their bank account, savings and any property or other assets.",
                 ["employment", "job", "checking_status", "savings_status",
                  "property_magnitude"]
             ),
