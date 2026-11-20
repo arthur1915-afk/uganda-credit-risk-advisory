@@ -719,12 +719,6 @@ elif page == "Model Performance & Validation":
                 "Check that Streamlit Community Cloud can access OpenML and that the "
                 "saved model package matches the original German Credit feature schema."
             )
-rkdown(f"- {limitation}")
-
-        except Exception as exc:
-            st.error("The evaluation file could not be read.")
-            st.exception(exc)
-
 # -------------------------------------------------------------------
 # Borrower registration
 # -------------------------------------------------------------------
