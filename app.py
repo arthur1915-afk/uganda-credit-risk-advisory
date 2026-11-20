@@ -1153,24 +1153,56 @@ elif page == "Credit Risk Assessment":
                     transformed, columns=feature_names
                 )
 
+                # Resolve probabilities by the model's explicit class labels.
+                # Do not assume predict_proba column 1 is always the bad-credit class.
+                def class_probability(model, transformed_input, target_class):
+                    classes = np.asarray(model.classes_)
+                    matches = np.flatnonzero(classes == target_class)
+                    if len(matches) != 1:
+                        raise ValueError(
+                            f"{model.__class__.__name__} does not contain expected "
+                            f"class {target_class}; model classes are {classes.tolist()}."
+                        )
+                    probabilities = np.asarray(
+                        model.predict_proba(transformed_input)[0], dtype=float
+                    )
+                    return float(probabilities[int(matches[0])])
+
                 prediction = int(gradient_model.predict(transformed_df)[0])
-                probabilities = gradient_model.predict_proba(transformed_df)[0]
-                bad_probability = float(probabilities[1])
+                bad_probability = class_probability(gradient_model, transformed_df, 1)
+                good_probability = class_probability(gradient_model, transformed_df, 0)
 
                 # Secondary model comparison for the research prototype.
                 logistic_prediction = int(logistic_model.predict(transformed_df)[0])
-                logistic_probabilities = logistic_model.predict_proba(transformed_df)[0]
+                logistic_bad_probability = class_probability(
+                    logistic_model, transformed_df, 1
+                )
 
+                # Explain the bad-credit class consistently with the displayed
+                # bad-credit probability, handling SHAP's supported output shapes.
                 shap_result = shap_explainer(transformed_df)
-                shap_values = np.asarray(shap_result.values)
-                if shap_values.ndim == 3:
-                    shap_contributions = shap_values[0, :, 1]
-                elif shap_values.ndim == 2:
-                    shap_contributions = shap_values[0]
+                raw_shap_values = shap_result.values
+                if isinstance(raw_shap_values, list):
+                    class_index = int(np.flatnonzero(
+                        np.asarray(gradient_model.classes_) == 1
+                    )[0])
+                    shap_contributions = np.asarray(
+                        raw_shap_values[class_index]
+                    )[0]
                 else:
-                    raise ValueError(
-                        f"Unexpected SHAP output shape: {shap_values.shape}"
-                    )
+                    shap_values = np.asarray(raw_shap_values)
+                    if shap_values.ndim == 3:
+                        class_index = int(np.flatnonzero(
+                            np.asarray(gradient_model.classes_) == 1
+                        )[0])
+                        shap_contributions = shap_values[0, :, class_index]
+                    elif shap_values.ndim == 2:
+                        # Binary TreeExplainer returns the single explained output.
+                        shap_contributions = shap_values[0]
+                    else:
+                        raise ValueError(
+                            f"Unexpected SHAP output shape: {shap_values.shape}"
+                        )
 
                 lime_result = lime_explainer.explain_instance(
                     data_row=transformed_df.iloc[0].to_numpy(),
@@ -1184,9 +1216,9 @@ elif page == "Credit Risk Assessment":
                     "reference": borrower["reference"],
                     "prediction": prediction,
                     "bad_probability": bad_probability,
-                    "good_probability": float(probabilities[0]),
+                    "good_probability": good_probability,
                     "logistic_prediction": logistic_prediction,
-                    "logistic_bad_probability": float(logistic_probabilities[1]),
+                    "logistic_bad_probability": logistic_bad_probability,
                     "shap_contributions": shap_contributions,
                     "lime_result": lime_result,
                     "created_at": datetime.now().strftime("%Y-%m-%d %H:%M")
