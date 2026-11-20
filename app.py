@@ -567,7 +567,7 @@ elif page == "Model Performance & Validation":
             if field not in X_test.columns:
                 continue
             groups = {}
-            values = X_test[field].fillna("Missing").astype(str)
+            values = X_test[field].astype("object").fillna("Missing").astype(str)
             for group in sorted(values.unique()):
                 mask = (values == group).to_numpy()
                 n = int(mask.sum())
