@@ -896,10 +896,21 @@ elif page == "Borrower Registration":
         "foreign_worker": {"A201": "Yes", "A202": "No"}
     }
 
+    # Restore saved values when returning to this page. Widget keys also
+    # preserve unsaved edits across page navigation during the current session.
+    saved_values = (st.session_state.borrower or {}).get("values", {})
+    saved_reference = (st.session_state.borrower or {}).get("reference", "UG-DEMO-001")
+    if "applicant_reference" not in st.session_state:
+        st.session_state.applicant_reference = saved_reference
+    for feature in original_features:
+        widget_key = f"input_{feature}"
+        if widget_key not in st.session_state and feature in saved_values:
+            st.session_state[widget_key] = saved_values[feature]
+
     st.markdown("#### Applicant reference")
     reference = st.text_input(
         "Application reference",
-        value="UG-DEMO-001",
+        key="applicant_reference",
         help="Use a fictional reference such as UG-DEMO-001. Do not enter a real name, phone number or national ID."
     )
     values = {}
@@ -1013,9 +1024,9 @@ elif page == "Borrower Registration":
         value=False
     )
     submitted = st.button(
-    "Save applicant profile",
-    use_container_width=True
-)
+        "Save applicant profile",
+        use_container_width=True
+    )
 
     if submitted:
         if not reference.strip():
