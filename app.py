@@ -7,6 +7,12 @@ import joblib
 import shap
 from lime.lime_tabular import LimeTabularExplainer
 from datetime import datetime
+from sklearn.datasets import fetch_openml
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import (
+    accuracy_score, precision_score, recall_score, f1_score,
+    roc_auc_score, confusion_matrix
+)
 
 st.set_page_config(
     page_title="Uganda Credit Risk Advisory",
@@ -485,13 +491,7 @@ if page == "Dashboard":
         st.markdown(
             "<div class='section-card'><div class='eyebrow'>HUMAN OVERSIGHT</div>"
             f"<h3>{len(st.session_state.reviews)} review record(s)</h3>"
-            "<div class='small-muted'>Reviewer entries are held in the current "
-            "browser session only. They are not saved to a permanent audit database."
-            "</div></div>",
-            unsafe_allow_html=True
-        )
-
-# Model performance and validation
+            "<div# Model performance and validation
 # -------------------------------------------------------------------
 elif page == "Model Performance & Validation":
     page_heading(
@@ -501,154 +501,218 @@ elif page == "Model Performance & Validation":
     )
     research_notice()
 
-    evaluation_path = "model_evaluation.json"
-    if not os.path.exists(evaluation_path):
-        st.markdown(
-            "<div class='section-card'><div class='eyebrow'>EVALUATION DATA REQUIRED</div>"
-            "<h3>Test-set results have not been uploaded yet</h3>"
-            "<div class='small-muted'>The dashboard deliberately does not invent "
-            "performance figures. Generate the metrics from the held-out benchmark "
-            "test set, then add the resulting JSON file to the repository.</div></div>",
-            unsafe_allow_html=True
-        )
-        st.markdown("### Generate the evaluation file")
-        st.markdown(
-            "1. Open the Google Colab notebook used to train the prototype.\n"
-            "2. Ensure the latest `credit_risk_model.joblib` is available.\n"
-            "3. Run `evaluate_model.py` in the same environment (or copy its code into a Colab cell).\n"
-            "4. Download the generated `model_evaluation.json`.\n"
-            "5. Upload `model_evaluation.json` to the root of the GitHub repository."
-        )
-        st.code(
-            "from google.colab import files\n"
-            "files.download('model_evaluation.json')",
-            language="python"
-        )
-        st.info(
-            "The evaluation script recreates the stratified 80/20 split with "
-            "random_state=42 and evaluates the saved models on the held-out test set. "
-            "Check that these settings match the original training notebook before "
-            "treating the results as thesis findings."
-        )
-    else:
-        try:
-            with open(evaluation_path, "r", encoding="utf-8") as file:
-                evaluation = json.load(file)
+    st.markdown(
+        "<div class='section-card'><div class='eyebrow'>LIVE BENCHMARK EVALUATION</div>"
+        "<h3>Evaluate the saved models on a held-out test set</h3>"
+        "<div class='small-muted'>The application will retrieve the German Credit "
+        "benchmark, recreate the stratified 80/20 split and calculate metrics "
+        "directly. You no longer need to upload a separate JSON file.</div></div>",
+        unsafe_allow_html=True
+    )
 
-            st.markdown(
-                f"<div class='section-card'><div class='eyebrow'>EVALUATION DATASET</div>"
-                f"<h3>{evaluation.get('dataset', 'Benchmark dataset')}</h3>"
-                f"<div class='small-muted'>Held-out test cases: "
-                f"{evaluation.get('test_rows', '—')} · "
-                f"Test split: {evaluation.get('test_size', '—')} · "
-                f"Random state: {evaluation.get('random_state', '—')}</div></div>",
-                unsafe_allow_html=True
+    @st.cache_data(show_spinner=False)
+    def load_benchmark_data():
+        dataset = fetch_openml(name="credit-g", version=1, as_frame=True)
+        return dataset.data, dataset.target.astype(str)
+
+    @st.cache_data(show_spinner=False)
+    def calculate_evaluation(_preprocessor, _gradient_model, _logistic_model, feature_list):
+        X, target = load_benchmark_data()
+        X = X[feature_list].copy()
+        y = (target.str.lower() == "bad").astype(int)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.20, random_state=42, stratify=y
+        )
+        transformed = _preprocessor.transform(X_test)
+        transformed_df = pd.DataFrame(
+            transformed,
+            columns=list(package["feature_names"])
+        )
+        y_true = np.asarray(y_test, dtype=int)
+        output = {
+            "test_rows": int(len(X_test)),
+            "dataset_rows": int(len(X)),
+            "models": {},
+            "fairness": {}
+        }
+        model_map = {
+            "Gradient Boosting": _gradient_model,
+            "Logistic Regression": _logistic_model
+        }
+        predictions_by_model = {}
+        for model_name, model in model_map.items():
+            predicted = np.asarray(model.predict(transformed_df), dtype=int)
+            probabilities = np.asarray(model.predict_proba(transformed_df))[:, 1]
+            predictions_by_model[model_name] = predicted
+            output["models"][model_name] = {
+                "accuracy": float(accuracy_score(y_true, predicted)),
+                "precision": float(precision_score(y_true, predicted, zero_division=0)),
+                "recall": float(recall_score(y_true, predicted, zero_division=0)),
+                "f1": float(f1_score(y_true, predicted, zero_division=0)),
+                "roc_auc": float(roc_auc_score(y_true, probabilities)),
+                "confusion_matrix": confusion_matrix(
+                    y_true, predicted, labels=[0, 1]
+                ).tolist()
+            }
+
+        primary_predictions = predictions_by_model["Gradient Boosting"]
+        for field in ["personal_status", "foreign_worker"]:
+            if field not in X_test.columns:
+                continue
+            groups = {}
+            values = X_test[field].fillna("Missing").astype(str)
+            for group in sorted(values.unique()):
+                mask = (values == group).to_numpy()
+                n = int(mask.sum())
+                if n < 10:
+                    groups[group] = {
+                        "n": n,
+                        "suppressed": True,
+                        "note": "Fewer than 10 test cases; metric suppressed."
+                    }
+                    continue
+                actual = y_true[mask]
+                predicted = primary_predictions[mask]
+                actual_bad = int((actual == 1).sum())
+                actual_good = int((actual == 0).sum())
+                groups[group] = {
+                    "n": n,
+                    "bad_class_prediction_rate": float((predicted == 1).mean()),
+                    "bad_class_recall": (
+                        float(((predicted == 1) & (actual == 1)).sum() / actual_bad)
+                        if actual_bad else None
+                    ),
+                    "false_positive_rate": (
+                        float(((predicted == 1) & (actual == 0)).sum() / actual_good)
+                        if actual_good else None
+                    )
+                }
+            output["fairness"][field] = groups
+        return output
+
+    if st.button("Run benchmark validation", type="primary", use_container_width=True):
+        st.session_state["run_model_validation"] = True
+
+    if st.session_state.get("run_model_validation", False):
+        try:
+            with st.spinner("Retrieving benchmark data and evaluating both models..."):
+                evaluation = calculate_evaluation(
+                    preprocessor, gradient_model, logistic_model, original_features
+                )
+            st.success(
+                f"Evaluation completed on {evaluation['test_rows']} held-out cases."
+            )
+            st.markdown("### Dataset and validation setup")
+            info1, info2, info3 = st.columns(3)
+            info1.metric("Benchmark records", evaluation["dataset_rows"])
+            info2.metric("Held-out test cases", evaluation["test_rows"])
+            info3.metric("Test proportion", "20%")
+            st.caption(
+                "German Credit (OpenML credit-g) · Stratified split · "
+                "Random state 42 · Positive class: bad credit (1)"
             )
 
-            models_data = evaluation.get("models", {})
-            selected_model = st.selectbox(
-                "Select model",
-                options=list(models_data.keys())
-            ) if models_data else None
+            model_names = list(evaluation["models"].keys())
+            selected_model = st.selectbox("Select model to inspect", model_names)
+            metrics = evaluation["models"][selected_model]
 
-            if selected_model:
-                metrics = models_data[selected_model]
-                st.markdown("### Predictive performance")
-                metric_cols = st.columns(5)
-                metric_items = [
-                    ("Accuracy", metrics.get("accuracy")),
-                    ("Precision", metrics.get("precision")),
-                    ("Recall", metrics.get("recall")),
-                    ("F1-score", metrics.get("f1")),
-                    ("ROC-AUC", metrics.get("roc_auc"))
+            st.markdown("### Predictive performance")
+            metric_cols = st.columns(5)
+            for col, (label, key) in zip(
+                metric_cols,
+                [
+                    ("Accuracy", "accuracy"),
+                    ("Precision", "precision"),
+                    ("Recall", "recall"),
+                    ("F1-score", "f1"),
+                    ("ROC-AUC", "roc_auc")
                 ]
-                for col, (label, value) in zip(metric_cols, metric_items):
-                    col.metric(label, f"{float(value):.3f}" if value is not None else "—")
+            ):
+                col.metric(label, f"{metrics[key]:.3f}")
 
-                st.markdown("### Confusion matrix")
-                matrix = metrics.get("confusion_matrix", [])
-                if len(matrix) == 2 and all(len(row) == 2 for row in matrix):
-                    matrix_df = pd.DataFrame(
-                        matrix,
-                        index=["Actual good-credit", "Actual bad-credit"],
-                        columns=["Predicted good-credit", "Predicted bad-credit"]
-                    )
-                    st.dataframe(matrix_df, use_container_width=True)
-                    st.caption(
-                        "Rows represent actual classes; columns represent predicted "
-                        "classes. The positive class is bad credit (1)."
-                    )
-                else:
-                    st.warning("A valid 2×2 confusion matrix was not found.")
+            st.markdown("### Confusion matrix")
+            matrix = metrics["confusion_matrix"]
+            matrix_df = pd.DataFrame(
+                matrix,
+                index=["Actual good-credit", "Actual bad-credit"],
+                columns=["Predicted good-credit", "Predicted bad-credit"]
+            )
+            st.dataframe(matrix_df, use_container_width=True)
+            st.caption(
+                "Rows represent actual classes; columns represent predicted classes. "
+                "The positive class is bad credit (1)."
+            )
 
-            st.markdown("### Compare model performance")
-            comparison_rows = []
-            for model_name, model_metrics in models_data.items():
-                comparison_rows.append({
-                    "Model": model_name,
-                    "Accuracy": model_metrics.get("accuracy"),
-                    "Precision": model_metrics.get("precision"),
-                    "Recall": model_metrics.get("recall"),
-                    "F1-score": model_metrics.get("f1"),
-                    "ROC-AUC": model_metrics.get("roc_auc")
-                })
-            if comparison_rows:
-                st.dataframe(
-                    pd.DataFrame(comparison_rows),
-                    use_container_width=True,
-                    hide_index=True,
-                    column_config={
-                        metric: st.column_config.NumberColumn(metric, format="%.3f")
-                        for metric in ["Accuracy", "Precision", "Recall", "F1-score", "ROC-AUC"]
-                    }
-                )
+            st.markdown("### Model comparison")
+            comparison_rows = [
+                {"Model": name, **{
+                    "Accuracy": data["accuracy"],
+                    "Precision": data["precision"],
+                    "Recall": data["recall"],
+                    "F1-score": data["f1"],
+                    "ROC-AUC": data["roc_auc"]
+                }}
+                for name, data in evaluation["models"].items()
+            ]
+            st.dataframe(
+                pd.DataFrame(comparison_rows),
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    metric: st.column_config.NumberColumn(metric, format="%.3f")
+                    for metric in ["Accuracy", "Precision", "Recall", "F1-score", "ROC-AUC"]
+                }
+            )
 
             st.markdown("### Group-level outcome analysis")
             st.caption(
-                "Descriptive subgroup metrics for the primary Gradient Boosting model. "
-                "These are diagnostic indicators, not a legal fairness determination."
+                "Descriptive subgroup results for Gradient Boosting. These metrics "
+                "are diagnostic indicators, not proof of fairness or discrimination."
             )
-            fairness_data = evaluation.get("fairness", {})
-            if fairness_data:
-                for field, groups in fairness_data.items():
-                    st.markdown(f"#### {readable_feature_name(field)}")
-                    rows = []
-                    for group_name, values in groups.items():
-                        row = {"Group": group_name, "Test cases": values.get("n", 0)}
-                        if values.get("suppressed"):
-                            row["Note"] = values.get("note", "Suppressed")
-                        else:
-                            row["Bad-class prediction rate"] = values.get("bad_class_prediction_rate")
-                            row["Bad-class recall"] = values.get("bad_class_recall")
-                            row["False-positive rate"] = values.get("false_positive_rate")
-                            row["Note"] = ""
-                        rows.append(row)
-                    st.dataframe(
-                        pd.DataFrame(rows),
-                        use_container_width=True,
-                        hide_index=True,
-                        column_config={
-                            "Bad-class prediction rate": st.column_config.NumberColumn(format="%.3f"),
-                            "Bad-class recall": st.column_config.NumberColumn(format="%.3f"),
-                            "False-positive rate": st.column_config.NumberColumn(format="%.3f")
-                        }
-                    )
-            else:
-                st.info("No subgroup evaluation results are included in the evaluation file.")
+            for field, groups in evaluation["fairness"].items():
+                st.markdown(f"#### {readable_feature_name(field)}")
+                rows = []
+                for group_name, values in groups.items():
+                    row = {"Group": group_name, "Test cases": values["n"]}
+                    if values.get("suppressed"):
+                        row["Note"] = values["note"]
+                    else:
+                        row["Bad-class prediction rate"] = values["bad_class_prediction_rate"]
+                        row["Bad-class recall"] = values["bad_class_recall"]
+                        row["False-positive rate"] = values["false_positive_rate"]
+                        row["Note"] = ""
+                    rows.append(row)
+                st.dataframe(
+                    pd.DataFrame(rows),
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "Bad-class prediction rate": st.column_config.NumberColumn(format="%.3f"),
+                        "Bad-class recall": st.column_config.NumberColumn(format="%.3f"),
+                        "False-positive rate": st.column_config.NumberColumn(format="%.3f")
+                    }
+                )
 
-            st.markdown("### Validation protocol")
+            st.markdown("### Validation protocol and limitations")
             st.markdown(
-                "- **Hold-out evaluation:** metrics are calculated on a stratified test set not used to fit the models.\n"
-                "- **Model comparison:** Gradient Boosting and Logistic Regression are evaluated on the same test cases.\n"
-                "- **Threshold:** class predictions use each model's default classification threshold.\n"
-                "- **Group analysis:** subgroup rates are descriptive; small groups are suppressed to avoid over-interpreting unstable estimates."
+                "- Both trained models are evaluated on the same stratified held-out test set.\n"
+                "- Metrics use the default classification threshold.\n"
+                "- Group-level results are descriptive and may be unstable for small subgroups.\n"
+                "- This is internal benchmark evaluation, not external validation in Uganda."
             )
-            with st.expander("Evaluation dataset and limitations"):
-                st.write(f"Dataset: {evaluation.get('dataset')}")
-                st.write(f"Rows in dataset: {evaluation.get('dataset_rows')}")
-                st.write(f"Rows in held-out test set: {evaluation.get('test_rows')}")
-                for limitation in evaluation.get("limitations", []):
-                    st.markdown(f"- {limitation}")
+            st.warning(
+                "These results describe performance on the German Credit benchmark only. "
+                "They do not establish performance, fairness or suitability for Ugandan "
+                "bank lending decisions."
+            )
+        except Exception as exc:
+            st.error("The benchmark evaluation could not be completed.")
+            st.exception(exc)
+            st.info(
+                "Check that Streamlit Community Cloud can access OpenML and that the "
+                "saved model package matches the original German Credit feature schema."
+            )
+rkdown(f"- {limitation}")
 
         except Exception as exc:
             st.error("The evaluation file could not be read.")
