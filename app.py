@@ -242,7 +242,8 @@ page = st.sidebar.radio(
         "Credit Risk Assessment",
         "Model Performance & Validation",
         "Explainable AI",
-        "Credit Officer Review"
+        "Credit Officer Review",
+        "Credit Review Assessment"
     ],
     format_func=lambda item: {
         "Dashboard": "▦  Dashboard",
@@ -250,7 +251,8 @@ page = st.sidebar.radio(
         "Credit Risk Assessment": "◈  Risk assessment",
         "Model Performance & Validation": "▤  Model performance",
         "Explainable AI": "✳  Explainable AI",
-        "Credit Officer Review": "✓  Credit officer review"
+        "Credit Officer Review": "✓  Credit officer review",
+        "Credit Review Assessment": "▣  Credit review assessment"
     }[item],
     label_visibility="visible"
 )
@@ -1635,6 +1637,83 @@ elif page == "Credit Officer Review":
             use_container_width=True,
             hide_index=True
         )
+
+# -------------------------------------------------------------------
+# Credit review assessment - final decision summary
+# -------------------------------------------------------------------
+elif page == "Credit Review Assessment":
+    page_heading(
+        "FINAL ASSESSMENT",
+        "Credit Review Assessment",
+        "Final summary of the model findings and the credit officer's recorded review decision."
+    )
+    assessment = st.session_state.assessment
+    if assessment is None:
+        st.info("Complete a borrower registration and run a credit risk assessment first.")
+    else:
+        matching_reviews = [
+            item for item in st.session_state.reviews
+            if item["Reference"] == assessment["reference"]
+        ]
+        if not matching_reviews:
+            st.info("No credit officer review has been saved for this assessment yet. Go to Credit Officer Review to record the remarks and outcome.")
+        else:
+            review = matching_reviews[-1]
+            decision = review["Decision"]
+            if decision == "Approved (demonstration only)":
+                st.markdown(
+                    "<div style='background:#E8F8EF;border:2px solid #16A34A;border-radius:18px;padding:1.5rem;text-align:center;margin:.5rem 0 1.2rem'>"
+                    "<div style='font-size:.85rem;font-weight:800;letter-spacing:.14em;color:#166534'>FINAL REVIEW DECISION</div>"
+                    "<div style='font-family:Manrope,sans-serif;font-size:3.5rem;font-weight:900;line-height:1.15;color:#15803D'>APPROVED</div>"
+                    "<div style='color:#166534;font-size:.9rem'>Demonstration outcome recorded by the credit officer</div></div>",
+                    unsafe_allow_html=True
+                )
+            elif decision == "Not approved (demonstration only)":
+                st.markdown(
+                    "<div style='background:#FEF0F0;border:2px solid #DC2626;border-radius:18px;padding:1.5rem;text-align:center;margin:.5rem 0 1.2rem'>"
+                    "<div style='font-size:.85rem;font-weight:800;letter-spacing:.14em;color:#991B1B'>FINAL REVIEW DECISION</div>"
+                    "<div style='font-family:Manrope,sans-serif;font-size:3.5rem;font-weight:900;line-height:1.15;color:#DC2626'>DENIED</div>"
+                    "<div style='color:#991B1B;font-size:.9rem'>Demonstration outcome recorded by the credit officer</div></div>",
+                    unsafe_allow_html=True
+                )
+            elif decision == "Further information required":
+                st.warning("FURTHER INFORMATION REQUIRED — the credit officer has not recorded an approval or denial.")
+            else:
+                st.info("PENDING REVIEW — no final approval or denial has been recorded.")
+
+            st.markdown("### Brief assessment summary")
+            summary_left, summary_right = st.columns(2)
+            with summary_left:
+                st.markdown(
+                    f"<div class='section-card'><div class='eyebrow'>APPLICANT REFERENCE</div>"
+                    f"<h3 style='margin:0'>{assessment['reference']}</h3>"
+                    f"<div class='small-muted'>Assessment date: {assessment['created_at']}</div></div>",
+                    unsafe_allow_html=True
+                )
+            with summary_right:
+                st.markdown(
+                    f"<div class='section-card'><div class='eyebrow'>PRIMARY MODEL FINDING</div>"
+                    f"<h3 style='margin:0'>{risk_label(assessment['prediction'])}</h3>"
+                    f"<div class='small-muted'>Bad-credit class probability: {assessment['bad_probability']:.1%}</div></div>",
+                    unsafe_allow_html=True
+                )
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Gradient Boosting", risk_label(assessment["prediction"]))
+            c2.metric("Logistic Regression", risk_label(assessment["logistic_prediction"]))
+            c3.metric("Model agreement", "Yes" if assessment["prediction"] == assessment["logistic_prediction"] else "No")
+
+            st.markdown("### Credit officer review")
+            st.write(f"**Reviewer:** {review['Reviewer']}")
+            st.write(f"**Review outcome:** {decision}")
+            st.write(f"**Review date:** {review['Date']}")
+            st.markdown("**Credit officer remarks**")
+            st.info(review["Remarks"])
+            st.warning(
+                "Academic demonstration only. APPROVED or DENIED reflects the simulated "
+                "reviewer disposition entered in this prototype; it is not a real lending "
+                "decision. The model uses the German Credit benchmark dataset, not Ugandan "
+                "bank lending records. Do not use this prototype for actual loan decisions."
+            )
 
 # Persistent page footer
 # -------------------------------------------------------------------
