@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import json
+import os
 import numpy as np
 import joblib
 import shap
@@ -232,6 +234,7 @@ page = st.sidebar.radio(
         "Dashboard",
         "Borrower Registration",
         "Credit Risk Assessment",
+        "Model Performance & Validation",
         "Explainable AI",
         "Credit Officer Review"
     ],
@@ -239,6 +242,7 @@ page = st.sidebar.radio(
         "Dashboard": "▦  Dashboard",
         "Borrower Registration": "＋  Borrower registration",
         "Credit Risk Assessment": "◈  Risk assessment",
+        "Model Performance & Validation": "▤  Model performance",
         "Explainable AI": "✳  Explainable AI",
         "Credit Officer Review": "✓  Officer review"
     }[item],
@@ -487,6 +491,170 @@ if page == "Dashboard":
             unsafe_allow_html=True
         )
 
+# Model performance and validation
+# -------------------------------------------------------------------
+elif page == "Model Performance & Validation":
+    page_heading(
+        "MODEL GOVERNANCE",
+        "Model performance & validation",
+        "Evaluate predictive performance and inspect descriptive group-level outcomes."
+    )
+    research_notice()
+
+    evaluation_path = "model_evaluation.json"
+    if not os.path.exists(evaluation_path):
+        st.markdown(
+            "<div class='section-card'><div class='eyebrow'>EVALUATION DATA REQUIRED</div>"
+            "<h3>Test-set results have not been uploaded yet</h3>"
+            "<div class='small-muted'>The dashboard deliberately does not invent "
+            "performance figures. Generate the metrics from the held-out benchmark "
+            "test set, then add the resulting JSON file to the repository.</div></div>",
+            unsafe_allow_html=True
+        )
+        st.markdown("### Generate the evaluation file")
+        st.markdown(
+            "1. Open the Google Colab notebook used to train the prototype.\n"
+            "2. Ensure the latest `credit_risk_model.joblib` is available.\n"
+            "3. Run `evaluate_model.py` in the same environment (or copy its code into a Colab cell).\n"
+            "4. Download the generated `model_evaluation.json`.\n"
+            "5. Upload `model_evaluation.json` to the root of the GitHub repository."
+        )
+        st.code(
+            "from google.colab import files\n"
+            "files.download('model_evaluation.json')",
+            language="python"
+        )
+        st.info(
+            "The evaluation script recreates the stratified 80/20 split with "
+            "random_state=42 and evaluates the saved models on the held-out test set. "
+            "Check that these settings match the original training notebook before "
+            "treating the results as thesis findings."
+        )
+    else:
+        try:
+            with open(evaluation_path, "r", encoding="utf-8") as file:
+                evaluation = json.load(file)
+
+            st.markdown(
+                f"<div class='section-card'><div class='eyebrow'>EVALUATION DATASET</div>"
+                f"<h3>{evaluation.get('dataset', 'Benchmark dataset')}</h3>"
+                f"<div class='small-muted'>Held-out test cases: "
+                f"{evaluation.get('test_rows', '—')} · "
+                f"Test split: {evaluation.get('test_size', '—')} · "
+                f"Random state: {evaluation.get('random_state', '—')}</div></div>",
+                unsafe_allow_html=True
+            )
+
+            models_data = evaluation.get("models", {})
+            selected_model = st.selectbox(
+                "Select model",
+                options=list(models_data.keys())
+            ) if models_data else None
+
+            if selected_model:
+                metrics = models_data[selected_model]
+                st.markdown("### Predictive performance")
+                metric_cols = st.columns(5)
+                metric_items = [
+                    ("Accuracy", metrics.get("accuracy")),
+                    ("Precision", metrics.get("precision")),
+                    ("Recall", metrics.get("recall")),
+                    ("F1-score", metrics.get("f1")),
+                    ("ROC-AUC", metrics.get("roc_auc"))
+                ]
+                for col, (label, value) in zip(metric_cols, metric_items):
+                    col.metric(label, f"{float(value):.3f}" if value is not None else "—")
+
+                st.markdown("### Confusion matrix")
+                matrix = metrics.get("confusion_matrix", [])
+                if len(matrix) == 2 and all(len(row) == 2 for row in matrix):
+                    matrix_df = pd.DataFrame(
+                        matrix,
+                        index=["Actual good-credit", "Actual bad-credit"],
+                        columns=["Predicted good-credit", "Predicted bad-credit"]
+                    )
+                    st.dataframe(matrix_df, use_container_width=True)
+                    st.caption(
+                        "Rows represent actual classes; columns represent predicted "
+                        "classes. The positive class is bad credit (1)."
+                    )
+                else:
+                    st.warning("A valid 2×2 confusion matrix was not found.")
+
+            st.markdown("### Compare model performance")
+            comparison_rows = []
+            for model_name, model_metrics in models_data.items():
+                comparison_rows.append({
+                    "Model": model_name,
+                    "Accuracy": model_metrics.get("accuracy"),
+                    "Precision": model_metrics.get("precision"),
+                    "Recall": model_metrics.get("recall"),
+                    "F1-score": model_metrics.get("f1"),
+                    "ROC-AUC": model_metrics.get("roc_auc")
+                })
+            if comparison_rows:
+                st.dataframe(
+                    pd.DataFrame(comparison_rows),
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        metric: st.column_config.NumberColumn(metric, format="%.3f")
+                        for metric in ["Accuracy", "Precision", "Recall", "F1-score", "ROC-AUC"]
+                    }
+                )
+
+            st.markdown("### Group-level outcome analysis")
+            st.caption(
+                "Descriptive subgroup metrics for the primary Gradient Boosting model. "
+                "These are diagnostic indicators, not a legal fairness determination."
+            )
+            fairness_data = evaluation.get("fairness", {})
+            if fairness_data:
+                for field, groups in fairness_data.items():
+                    st.markdown(f"#### {readable_feature_name(field)}")
+                    rows = []
+                    for group_name, values in groups.items():
+                        row = {"Group": group_name, "Test cases": values.get("n", 0)}
+                        if values.get("suppressed"):
+                            row["Note"] = values.get("note", "Suppressed")
+                        else:
+                            row["Bad-class prediction rate"] = values.get("bad_class_prediction_rate")
+                            row["Bad-class recall"] = values.get("bad_class_recall")
+                            row["False-positive rate"] = values.get("false_positive_rate")
+                            row["Note"] = ""
+                        rows.append(row)
+                    st.dataframe(
+                        pd.DataFrame(rows),
+                        use_container_width=True,
+                        hide_index=True,
+                        column_config={
+                            "Bad-class prediction rate": st.column_config.NumberColumn(format="%.3f"),
+                            "Bad-class recall": st.column_config.NumberColumn(format="%.3f"),
+                            "False-positive rate": st.column_config.NumberColumn(format="%.3f")
+                        }
+                    )
+            else:
+                st.info("No subgroup evaluation results are included in the evaluation file.")
+
+            st.markdown("### Validation protocol")
+            st.markdown(
+                "- **Hold-out evaluation:** metrics are calculated on a stratified test set not used to fit the models.\n"
+                "- **Model comparison:** Gradient Boosting and Logistic Regression are evaluated on the same test cases.\n"
+                "- **Threshold:** class predictions use each model's default classification threshold.\n"
+                "- **Group analysis:** subgroup rates are descriptive; small groups are suppressed to avoid over-interpreting unstable estimates."
+            )
+            with st.expander("Evaluation dataset and limitations"):
+                st.write(f"Dataset: {evaluation.get('dataset')}")
+                st.write(f"Rows in dataset: {evaluation.get('dataset_rows')}")
+                st.write(f"Rows in held-out test set: {evaluation.get('test_rows')}")
+                for limitation in evaluation.get("limitations", []):
+                    st.markdown(f"- {limitation}")
+
+        except Exception as exc:
+            st.error("The evaluation file could not be read.")
+            st.exception(exc)
+
+# -------------------------------------------------------------------
 # Borrower registration
 # -------------------------------------------------------------------
 elif page == "Borrower Registration":
