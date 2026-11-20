@@ -756,23 +756,23 @@ elif page == "Borrower Registration":
 
     # Translate technical dataset names into clear form labels.
     field_labels = {
-        "checking_status": "Bank account situation",
+        "checking_status": "Current bank account balance",
         "duration": "Loan term (months)",
         "credit_history": "Previous credit repayment history",
         "purpose": "Purpose of the loan",
         "credit_amount": "Requested loan amount (dataset units)",
-        "savings_status": "Savings amount category",
-        "employment": "How long has the applicant been employed?",
+        "savings_status": "Current savings balance",
+        "employment": "How long has the applicant been working?",
         "installment_commitment": "Installment burden (dataset scale: 1–4)",
         "personal_status": "Personal / marital status category",
         "other_parties": "Co-applicant or guarantor",
         "residence_since": "Years at current residence (dataset scale)",
-        "property_magnitude": "Property or other assets owned",
+        "property_magnitude": "Property or other assets",
         "age": "Age (years)",
         "other_payment_plans": "Other active payment plans",
         "housing": "Housing arrangement",
         "existing_credits": "Number of existing credits",
-        "job": "What kind of work does the applicant do?",
+        "job": "What type of work does the applicant do?",
         "num_dependents": "Number of dependants",
         "own_telephone": "Telephone ownership",
         "foreign_worker": "Foreign-worker category"
@@ -837,10 +837,10 @@ elif page == "Borrower Registration":
             "unemployed/unskilled non-resident": "Not employed or unskilled non-resident",
         },
         "checking_status": {
-            "A11": "Account is overdrawn",
-            "A12": "Small positive balance",
-            "A13": "Higher account balance",
-            "A14": "Does not have a checking account"
+            "A11": "Account is overdrawn (below zero)",
+            "A12": "Small amount of money in the account",
+            "A13": "Larger amount of money in the account",
+            "A14": "No bank current account"
         },
         "credit_history": {
             "A30": "No previous credits / all paid",
@@ -856,14 +856,14 @@ elif page == "Borrower Registration":
             "A48": "Retraining", "A49": "Business", "A410": "Other"
         },
         "savings_status": {
-            "A61": "Less than 100", "A62": "Between 100 and 499",
-            "A63": "Between 500 and 999", "A64": "1,000 or more",
-            "A65": "No savings account / balance not recorded"
+            "A61": "Less than 100", "A62": "100 to 499",
+            "A63": "500 to 999", "A64": "1,000 or more",
+            "A65": "No savings recorded"
         },
         "employment": {
-            "A71": "Not currently employed", "A72": "Employed for less than 1 year",
-            "A73": "Employed for 1–3 years", "A74": "Employed for 4–6 years",
-            "A75": "Employed for 7 years or more"
+            "A71": "Not working at the moment", "A72": "Working for less than 1 year",
+            "A73": "Working for 1 to 3 years", "A74": "Working for 4 to 6 years",
+            "A75": "Working for 7 years or more"
         },
         "personal_status": {
             "A91": "Male: divorced or separated",
@@ -876,8 +876,8 @@ elif page == "Borrower Registration":
             "A103": "Guarantor"
         },
         "property_magnitude": {
-            "A121": "Real estate", "A122": "Building society savings / life insurance",
-            "A123": "Car or other assets", "A124": "Unknown / no property"
+            "A121": "Owns land or a house", "A122": "Has building savings or life insurance",
+            "A123": "Owns a car or other assets", "A124": "No property recorded"
         },
         "other_payment_plans": {
             "A141": "Bank", "A142": "Stores", "A143": "None"
@@ -886,9 +886,9 @@ elif page == "Borrower Registration":
             "A151": "Rent", "A152": "Own home", "A153": "Living free of rent"
         },
         "job": {
-            "A171": "Unemployed / unskilled non-resident",
-            "A172": "Unskilled resident", "A173": "Skilled employee / official",
-            "A174": "Management / self-employed / highly qualified"
+            "A171": "Not working / other work category",
+            "A172": "Basic or entry-level work", "A173": "Skilled or trained work",
+            "A174": "Professional, management or self-employed"
         },
         "own_telephone": {"A191": "No", "A192": "Yes"},
         "foreign_worker": {"A201": "Yes", "A202": "No"}
