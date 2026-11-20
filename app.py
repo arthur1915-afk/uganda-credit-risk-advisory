@@ -250,7 +250,7 @@ page = st.sidebar.radio(
         "Credit Risk Assessment": "◈  Risk assessment",
         "Model Performance & Validation": "▤  Model performance",
         "Explainable AI": "✳  Explainable AI",
-        "Credit Officer Review": "✓  Officer review"
+        "Credit Review Assessment": "✓  Credit review assessment"
     }[item],
     label_visibility="visible"
 )
