@@ -1600,13 +1600,13 @@ elif page == "Credit Officer Review":
                 help="Use a fictional reviewer name or ID."
             )
             decision = st.selectbox(
-                "Review outcome",
+                "Final review decision",
                 [
-                    "Pending review",
+                    "Select a decision",
                     "Approved (demonstration only)",
-                    "Not approved (demonstration only)",
-                    "Further information required"
-                ]
+                    "Not approved (demonstration only)"
+                ],
+                index=0
             )
             notes = st.text_area(
                 "Credit officer remarks",
@@ -1618,6 +1618,8 @@ elif page == "Credit Officer Review":
         if save_review:
             if not officer.strip():
                 st.error("Enter a reviewer name or fictional reviewer ID.")
+            elif decision == "Select a decision":
+                st.error("Select either Approved or Denied before saving.")
             elif not notes.strip():
                 st.error("Please add the credit officer's remarks before saving.")
             else:
@@ -1679,7 +1681,7 @@ elif page == "Credit Review Assessment":
             elif decision == "Further information required":
                 st.warning("FURTHER INFORMATION REQUIRED — the credit officer has not recorded an approval or denial.")
             else:
-                st.info("PENDING REVIEW — no final approval or denial has been recorded.")
+                st.info("A final decision has not yet been saved. Return to Credit Officer Review and select either Approved or Denied.")
 
             st.markdown("### Brief assessment summary")
             summary_left, summary_right = st.columns(2)
