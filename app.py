@@ -238,16 +238,14 @@ page = st.sidebar.radio(
     "WORKSPACE",
     [
         "Dashboard",
-        "Research Summary",
         "Borrower Registration",
         "Credit Risk Assessment",
         "Model Performance & Validation",
         "Explainable AI",
-        "Credit Officer Review"
+        "Credit Review Assessment"
     ],
     format_func=lambda item: {
         "Dashboard": "▦  Dashboard",
-        "Research Summary": "▧  Research summary",
         "Borrower Registration": "＋  Borrower registration",
         "Credit Risk Assessment": "◈  Risk assessment",
         "Model Performance & Validation": "▤  Model performance",
@@ -328,116 +326,6 @@ st.markdown(
 # -------------------------------------------------------------------
 # Dashboard
 # -------------------------------------------------------------------
-if page == "Research Summary":
-    page_heading(
-        "RESEARCH OVERVIEW",
-        "Prototype summary",
-        "A consolidated overview of the research prototype, its models, explanations and validation boundaries."
-    )
-    research_notice()
-
-    st.markdown(
-        "<div class='assessment-banner'>"
-        "<div><div class='eyebrow' style='color:#B8CEFF'>CONTEXT-AWARE XAI CREDIT RISK PROTOTYPE</div>"
-        "<h2>From borrower information to explainable model output.</h2>"
-        "<p>This prototype demonstrates how machine-learning classification, model comparison, "
-        "explainability and human review can be brought together in a single research workflow.</p></div>"
-        "<div class='banner-tag'>RESEARCH PROOF OF CONCEPT</div></div>",
-        unsafe_allow_html=True
-    )
-
-    st.markdown("### 1. Purpose and workflow")
-    workflow = [
-        ("01 · Borrower registration", "Capture fictional applicant information using fields aligned with the German Credit benchmark dataset."),
-        ("02 · Credit risk assessment", "Generate good-credit or bad-credit class predictions using the trained Gradient Boosting model, with Logistic Regression as a comparator."),
-        ("03 · Model performance", "Inspect held-out benchmark performance using accuracy, precision, recall, F1-score, ROC-AUC and a confusion matrix."),
-        ("04 · Explainable AI", "Use SHAP feature contributions and LIME local explanations to inspect how the models behave for an individual input."),
-        ("05 · Credit officer review", "Record a demonstration review and notes to illustrate the role of human oversight.")
-    ]
-    for title, description in workflow:
-        st.markdown(
-            f"<div class='section-card'><div class='eyebrow'>{title}</div><div>{description}</div></div>",
-            unsafe_allow_html=True
-        )
-
-    st.markdown("### 2. Machine-learning models")
-    model_left, model_right = st.columns(2)
-    with model_left:
-        st.markdown(
-            "<div class='section-card'><h4>Gradient Boosting</h4>"
-            "<div class='small-muted'>Primary classification model</div>"
-            "<p>Produces the main class prediction and probability distribution used in the assessment workflow.</p></div>",
-            unsafe_allow_html=True
-        )
-    with model_right:
-        st.markdown(
-            "<div class='section-card'><h4>Logistic Regression</h4>"
-            "<div class='small-muted'>Comparison model</div>"
-            "<p>Provides a second classification output to support comparison with the primary model.</p></div>",
-            unsafe_allow_html=True
-        )
-
-    st.markdown("### 3. Benchmark evaluation snapshot")
-    st.caption("Held-out German Credit benchmark test set · stratified 80/20 split · 200 test cases · random state 42.")
-    metric_cols = st.columns(5)
-    for col, label, value in zip(
-        metric_cols,
-        ["Accuracy", "Precision", "Recall", "F1-score", "ROC-AUC"],
-        ["0.790", "0.680", "0.567", "0.618", "0.792"]
-    ):
-        col.metric(label, value)
-    st.caption(
-        "These figures describe internal benchmark evaluation only. They are not evidence "
-        "of performance on Ugandan bank lending data."
-    )
-
-    st.markdown("### 4. Explainability and human oversight")
-    xai_left, xai_right = st.columns(2)
-    with xai_left:
-        st.markdown(
-            "<div class='section-card'><h4>SHAP</h4>"
-            "<p>Shows the direction and magnitude of feature contributions to the model output.</p>"
-            "<div class='small-muted'>Contributions describe model behaviour, not causal effects.</div></div>",
-            unsafe_allow_html=True
-        )
-        st.markdown(
-            "<div class='section-card'><h4>LIME</h4>"
-            "<p>Provides a local approximation of model behaviour around an individual applicant input.</p>"
-            "<div class='small-muted'>Local fidelity is not the same as overall model accuracy.</div></div>",
-            unsafe_allow_html=True
-        )
-    with xai_right:
-        st.markdown(
-            "<div class='section-card'><h4>Credit officer review</h4>"
-            "<p>Allows a demonstration reviewer to record a review status and notes alongside the model output.</p>"
-            "<div class='small-muted'>Human review is illustrated; no real lending decision is made.</div></div>",
-            unsafe_allow_html=True
-        )
-
-    st.markdown("### 5. Research scope and limitations")
-    st.warning(
-        "The models were trained on the German Credit (OpenML credit-g) benchmark dataset, "
-        "not on actual Ugandan bank lending records. The 80/20 held-out split is internal "
-        "benchmark evaluation, not external validation in Uganda."
-    )
-    st.markdown(
-        "- The dataset contains 1,000 benchmark records; the held-out test set contains 200 cases.\n"
-        "- Predicted class probabilities are not established as calibrated real-world default probabilities.\n"
-        "- SHAP and LIME explanations describe model behaviour and do not establish causation or fairness.\n"
-        "- Small subgroup results are descriptive and may be unstable.\n"
-        "- The prototype is for academic demonstration using fictional inputs only; it must not be used to approve, reject, rank or price real loan applications."
-    )
-
-    st.markdown("### 6. Current session")
-    a1, a2, a3 = st.columns(3)
-    a1.metric("Assessments run", len(st.session_state.history))
-    a2.metric("Reviews recorded", len(st.session_state.reviews))
-    a3.metric(
-        "Current assessment",
-        "Available" if st.session_state.assessment is not None else "Not yet run"
-    )
-    st.caption("Session activity is temporary and is not persistent storage.")
-
 elif page == "Dashboard":
     page_heading(
         "OVERVIEW",
@@ -1659,78 +1547,95 @@ elif page == "Explainable AI":
             )
 
 # -------------------------------------------------------------------
-# Credit officer review
+# Credit review assessment
 # -------------------------------------------------------------------
-elif page == "Credit Officer Review":
+elif page == "Credit Review Assessment":
     page_heading(
-        "HUMAN OVERSIGHT",
-        "Credit officer review",
-        "Record a reviewer assessment alongside the model output."
+        "FINAL REVIEW",
+        "Credit Review Assessment",
+        "Review the model's brief findings, record the credit officer's remarks and document a demonstration outcome."
     )
     assessment = st.session_state.assessment
     if assessment is None:
-        st.info("Generate an assessment before recording a review.")
+        st.info("Complete a borrower registration and run a credit risk assessment first. The final review summary will appear here.")
     else:
-        c1, c2 = st.columns(2)
-        with c1:
+        st.markdown("### Brief assessment summary")
+        summary_left, summary_right = st.columns(2)
+        with summary_left:
             st.markdown(
-                f"<div class='section-card'><div class='eyebrow'>APPLICANT</div>"
+                f"<div class='section-card'><div class='eyebrow'>APPLICANT REFERENCE</div>"
                 f"<h3 style='margin:0'>{assessment['reference']}</h3>"
-                f"<div class='small-muted'>Research demonstration record</div></div>",
+                f"<div class='small-muted'>Assessment date: {assessment['created_at']}</div></div>",
                 unsafe_allow_html=True
             )
-        with c2:
+        with summary_right:
             st.markdown(
-                f"<div class='section-card'><div class='eyebrow'>MODEL OUTPUT</div>"
+                f"<div class='section-card'><div class='eyebrow'>PRIMARY MODEL FINDING</div>"
                 f"<h3 style='margin:0'>{risk_label(assessment['prediction'])}</h3>"
                 f"<div class='small-muted'>Bad-credit class probability: "
                 f"{assessment['bad_probability']:.1%}</div></div>",
                 unsafe_allow_html=True
             )
+
+        s1, s2, s3 = st.columns(3)
+        s1.metric("Gradient Boosting", risk_label(assessment["prediction"]))
+        s2.metric("Logistic Regression", risk_label(assessment["logistic_prediction"]))
+        s3.metric("Model agreement", "Yes" if assessment["prediction"] == assessment["logistic_prediction"] else "No")
+        st.caption(
+            "The summary reports model classifications only. The probabilities are not calibrated "
+            "real-world default estimates and are not, by themselves, lending decisions."
+        )
+
+        st.markdown("### Credit officer review and remarks")
         st.warning(
-            "This panel records a research demonstration review only. "
-            "It does not authorise or support a real credit decision."
+            "Demonstration only: the outcome below is a simulated reviewer disposition for "
+            "the academic prototype, not an actual loan approval or rejection. The model "
+            "uses the German Credit benchmark dataset, not Ugandan bank lending records."
         )
         with st.form("officer_review"):
             officer = st.text_input(
-                "Demonstration reviewer",
+                "Credit officer / reviewer",
                 help="Use a fictional reviewer name or ID."
             )
-            status = st.selectbox(
-                "Review status",
+            decision = st.selectbox(
+                "Review outcome",
                 [
                     "Pending review",
-                    "Further information required",
-                    "Reviewed — additional assessment needed",
-                    "Review completed"
+                    "Approved (demonstration only)",
+                    "Not approved (demonstration only)",
+                    "Further information required"
                 ]
             )
-            notes = st.text_area("Review notes")
+            notes = st.text_area(
+                "Credit officer remarks",
+                placeholder="Summarise the review, supporting observations, concerns, or additional information required..."
+            )
             save_review = st.form_submit_button(
-                "Save review", use_container_width=True
+                "Save credit review assessment", use_container_width=True
             )
         if save_review:
             if not officer.strip():
                 st.error("Enter a reviewer name or fictional reviewer ID.")
+            elif not notes.strip():
+                st.error("Please add the credit officer's remarks before saving.")
             else:
                 st.session_state.reviews.append({
                     "Reference": assessment["reference"],
                     "Reviewer": officer.strip(),
-                    "Status": status,
-                    "Notes": notes,
+                    "Decision": decision,
+                    "Remarks": notes.strip(),
                     "Date": datetime.now().strftime("%Y-%m-%d %H:%M")
                 })
-                st.success("Review saved in this browser session.")
+                st.success("Credit review assessment saved in this browser session.")
 
     if st.session_state.reviews:
-        st.markdown("### Review activity")
+        st.markdown("### Previous review records")
         st.dataframe(
             pd.DataFrame(st.session_state.reviews),
             use_container_width=True,
             hide_index=True
         )
 
-# -------------------------------------------------------------------
 # Persistent page footer
 # -------------------------------------------------------------------
 st.markdown(
