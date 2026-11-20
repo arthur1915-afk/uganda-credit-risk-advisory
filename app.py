@@ -238,6 +238,7 @@ page = st.sidebar.radio(
     "WORKSPACE",
     [
         "Dashboard",
+        "Research Summary",
         "Borrower Registration",
         "Credit Risk Assessment",
         "Model Performance & Validation",
@@ -246,6 +247,7 @@ page = st.sidebar.radio(
     ],
     format_func=lambda item: {
         "Dashboard": "▦  Dashboard",
+        "Research Summary": "▧  Research summary",
         "Borrower Registration": "＋  Borrower registration",
         "Credit Risk Assessment": "◈  Risk assessment",
         "Model Performance & Validation": "▤  Model performance",
@@ -326,7 +328,117 @@ st.markdown(
 # -------------------------------------------------------------------
 # Dashboard
 # -------------------------------------------------------------------
-if page == "Dashboard":
+if page == "Research Summary":
+    page_heading(
+        "RESEARCH OVERVIEW",
+        "Prototype summary",
+        "A consolidated overview of the research prototype, its models, explanations and validation boundaries."
+    )
+    research_notice()
+
+    st.markdown(
+        "<div class='assessment-banner'>"
+        "<div><div class='eyebrow' style='color:#B8CEFF'>CONTEXT-AWARE XAI CREDIT RISK PROTOTYPE</div>"
+        "<h2>From borrower information to explainable model output.</h2>"
+        "<p>This prototype demonstrates how machine-learning classification, model comparison, "
+        "explainability and human review can be brought together in a single research workflow.</p></div>"
+        "<div class='banner-tag'>RESEARCH PROOF OF CONCEPT</div></div>",
+        unsafe_allow_html=True
+    )
+
+    st.markdown("### 1. Purpose and workflow")
+    workflow = [
+        ("01 · Borrower registration", "Capture fictional applicant information using fields aligned with the German Credit benchmark dataset."),
+        ("02 · Credit risk assessment", "Generate good-credit or bad-credit class predictions using the trained Gradient Boosting model, with Logistic Regression as a comparator."),
+        ("03 · Model performance", "Inspect held-out benchmark performance using accuracy, precision, recall, F1-score, ROC-AUC and a confusion matrix."),
+        ("04 · Explainable AI", "Use SHAP feature contributions and LIME local explanations to inspect how the models behave for an individual input."),
+        ("05 · Credit officer review", "Record a demonstration review and notes to illustrate the role of human oversight.")
+    ]
+    for title, description in workflow:
+        st.markdown(
+            f"<div class='section-card'><div class='eyebrow'>{title}</div><div>{description}</div></div>",
+            unsafe_allow_html=True
+        )
+
+    st.markdown("### 2. Machine-learning models")
+    model_left, model_right = st.columns(2)
+    with model_left:
+        st.markdown(
+            "<div class='section-card'><h4>Gradient Boosting</h4>"
+            "<div class='small-muted'>Primary classification model</div>"
+            "<p>Produces the main class prediction and probability distribution used in the assessment workflow.</p></div>",
+            unsafe_allow_html=True
+        )
+    with model_right:
+        st.markdown(
+            "<div class='section-card'><h4>Logistic Regression</h4>"
+            "<div class='small-muted'>Comparison model</div>"
+            "<p>Provides a second classification output to support comparison with the primary model.</p></div>",
+            unsafe_allow_html=True
+        )
+
+    st.markdown("### 3. Benchmark evaluation snapshot")
+    st.caption("Held-out German Credit benchmark test set · stratified 80/20 split · 200 test cases · random state 42.")
+    metric_cols = st.columns(5)
+    for col, label, value in zip(
+        metric_cols,
+        ["Accuracy", "Precision", "Recall", "F1-score", "ROC-AUC"],
+        ["0.790", "0.680", "0.567", "0.618", "0.792"]
+    ):
+        col.metric(label, value)
+    st.caption(
+        "These figures describe internal benchmark evaluation only. They are not evidence "
+        "of performance on Ugandan bank lending data."
+    )
+
+    st.markdown("### 4. Explainability and human oversight")
+    xai_left, xai_right = st.columns(2)
+    with xai_left:
+        st.markdown(
+            "<div class='section-card'><h4>SHAP</h4>"
+            "<p>Shows the direction and magnitude of feature contributions to the model output.</p>"
+            "<div class='small-muted'>Contributions describe model behaviour, not causal effects.</div></div>",
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            "<div class='section-card'><h4>LIME</h4>"
+            "<p>Provides a local approximation of model behaviour around an individual applicant input.</p>"
+            "<div class='small-muted'>Local fidelity is not the same as overall model accuracy.</div></div>",
+            unsafe_allow_html=True
+        )
+    with xai_right:
+        st.markdown(
+            "<div class='section-card'><h4>Credit officer review</h4>"
+            "<p>Allows a demonstration reviewer to record a review status and notes alongside the model output.</p>"
+            "<div class='small-muted'>Human review is illustrated; no real lending decision is made.</div></div>",
+            unsafe_allow_html=True
+        )
+
+    st.markdown("### 5. Research scope and limitations")
+    st.warning(
+        "The models were trained on the German Credit (OpenML credit-g) benchmark dataset, "
+        "not on actual Ugandan bank lending records. The 80/20 held-out split is internal "
+        "benchmark evaluation, not external validation in Uganda."
+    )
+    st.markdown(
+        "- The dataset contains 1,000 benchmark records; the held-out test set contains 200 cases.\n"
+        "- Predicted class probabilities are not established as calibrated real-world default probabilities.\n"
+        "- SHAP and LIME explanations describe model behaviour and do not establish causation or fairness.\n"
+        "- Small subgroup results are descriptive and may be unstable.\n"
+        "- The prototype is for academic demonstration using fictional inputs only; it must not be used to approve, reject, rank or price real loan applications."
+    )
+
+    st.markdown("### 6. Current session")
+    a1, a2, a3 = st.columns(3)
+    a1.metric("Assessments run", len(st.session_state.history))
+    a2.metric("Reviews recorded", len(st.session_state.reviews))
+    a3.metric(
+        "Current assessment",
+        "Available" if st.session_state.assessment is not None else "Not yet run"
+    )
+    st.caption("Session activity is temporary and is not persistent storage.")
+
+elif page == "Dashboard":
     page_heading(
         "OVERVIEW",
         "Credit intelligence dashboard",
