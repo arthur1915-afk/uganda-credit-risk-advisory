@@ -326,7 +326,7 @@ st.markdown(
 # -------------------------------------------------------------------
 # Dashboard
 # -------------------------------------------------------------------
-elif page == "Dashboard":
+if page == "Dashboard":
     page_heading(
         "OVERVIEW",
         "Credit intelligence dashboard",
