@@ -242,7 +242,7 @@ page = st.sidebar.radio(
         "Credit Risk Assessment",
         "Model Performance & Validation",
         "Explainable AI",
-        "Credit Review Assessment"
+        "Credit Officer Review"
     ],
     format_func=lambda item: {
         "Dashboard": "▦  Dashboard",
@@ -250,7 +250,7 @@ page = st.sidebar.radio(
         "Credit Risk Assessment": "◈  Risk assessment",
         "Model Performance & Validation": "▤  Model performance",
         "Explainable AI": "✳  Explainable AI",
-        "Credit Review Assessment": "✓  Credit review assessment"
+        "Credit Officer Review": "✓  Credit officer review"
     }[item],
     label_visibility="visible"
 )
@@ -1549,10 +1549,10 @@ elif page == "Explainable AI":
 # -------------------------------------------------------------------
 # Credit review assessment
 # -------------------------------------------------------------------
-elif page == "Credit Review Assessment":
+elif page == "Credit Officer Review":
     page_heading(
         "FINAL REVIEW",
-        "Credit Review Assessment",
+        "Credit Officer Review",
         "Review the model's brief findings, record the credit officer's remarks and document a demonstration outcome."
     )
     assessment = st.session_state.assessment
